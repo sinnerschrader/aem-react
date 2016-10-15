@@ -41,6 +41,8 @@
 								<extensions>true</extensions>
 								<configuration>
 										<instructions>
+                                            <!-- Import any version of javax.inject, to allow running on multiple versions of AEM -->
+                                            <Import-Package>javax.inject;version=0.0.0,*</Import-Package>
 												<Embed-Dependency>
 														jackson-core,
 														jackson-annotations,
