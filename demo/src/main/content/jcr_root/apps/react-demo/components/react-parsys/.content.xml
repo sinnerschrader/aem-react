@@ -2,18 +2,7 @@
 <jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
     jcr:primaryType="cq:Component"
     jcr:title="ReactParsys"
-<<<<<<< HEAD
-<<<<<<< HEAD
     allowedChildren="[*]"
     cq:isContainer="true"
     componentGroup="React Demo"
     />
-=======
-    componentGroup="React Demo"/>
->>>>>>> 5bd2842... removed redux
-=======
-    allowedChildren="[*]"
-    cq:isContainer="true"
-    componentGroup="React Demo"
-    />
->>>>>>> 9e9c974... router is working

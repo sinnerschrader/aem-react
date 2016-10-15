@@ -214,6 +214,28 @@
 														<failOnMissingEmbed>true</failOnMissingEmbed>
 												</configuration>
 										</plugin>
+										<plugin>
+											<groupId>org.codehaus.mojo</groupId>
+											<artifactId>xml-maven-plugin</artifactId>
+											<executions>
+												<execution>
+													<phase>validate</phase>
+													<goals>
+														<goal>validate</goal>
+													</goals>
+												</execution>
+											</executions>
+											<configuration>
+												<validationSets>
+													<validationSet>
+														<dir>src/main/content/jcr_root</dir>
+														<includes>
+															<include>**/*.xml</include>
+														</includes>
+													</validationSet>
+												</validationSets>
+											</configuration>
+										</plugin>
 								</plugins>
 						</build>
 				</profile>
@@ -240,6 +262,28 @@
 														<failOnError>true</failOnError>
 														<failOnMissingEmbed>true</failOnMissingEmbed>
 												</configuration>
+										</plugin>
+										<plugin>
+											<groupId>org.codehaus.mojo</groupId>
+											<artifactId>xml-maven-plugin</artifactId>
+											<executions>
+												<execution>
+													<phase>validate</phase>
+													<goals>
+														<goal>validate</goal>
+													</goals>
+												</execution>
+											</executions>
+											<configuration>
+												<validationSets>
+													<validationSet>
+														<dir>src/main/content/jcr_root</dir>
+														<includes>
+															<include>**/*.xml</include>
+														</includes>
+													</validationSet>
+												</validationSets>
+											</configuration>
 										</plugin>
 								</plugins>
 						</build>
