@@ -28,13 +28,13 @@
                 <h2 id="nav_{{@index}}">{{inc @index}} {{title}}</h2>
                 {{{markdown content 2}}}
                 {{#sections}}
-                    {{{markdown . 3}}}
+                    {{{markdown . 2}}}
                 {{/sections}}
                 {{#chapters}}
                     <h3 id="subnav_{{@../index}}_{{@index}}">{{inc @../index}}.{{inc @index}} {{title}}</h3>
                     {{{markdown content 3}}}
                     {{#sections}}
-                        {{{markdown . 4}}}
+                        {{{markdown . 3}}}
                     {{/sections}}
                     {{#chapters}}
                       <h4 id="subsubnav_{{@../../index}}_{{@../index}}_{{@index}}">{{inc @../../index}}.{{inc @../index}}.{{inc @index}} {{title}}</h4>
