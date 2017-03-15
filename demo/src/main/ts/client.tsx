@@ -6,6 +6,7 @@ import Cache from "aem-react-js/store/Cache";
 import componentRegistry from "./componentRegistry";
 import {browserHistory} from "react-router";
 import ResourceMappingImpl from "aem-react-js/router/ResourceMappingImpl";
+import "function.name";
 
 let rootComponentRegistry: RootComponentRegistry = new RootComponentRegistry();
 rootComponentRegistry.add(componentRegistry);
