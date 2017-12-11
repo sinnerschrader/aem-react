@@ -111,7 +111,7 @@ public class ReactScriptEngineTest {
 		String resourceType = "/apps/test";
 		Mockito.when(resource.getResourceType()).thenReturn(resourceType);
 		String path = "/content/page/test";
-		Mockito.when(resourceResolver.map(path)).thenReturn(path);
+		Mockito.when(resourceResolver.map(request, path)).thenReturn(path);
 		Mockito.when(resource.getPath()).thenReturn(path);
 		Mockito.when(request.getResource()).thenReturn(resource);
 

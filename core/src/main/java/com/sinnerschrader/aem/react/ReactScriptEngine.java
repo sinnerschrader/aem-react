@@ -118,11 +118,11 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			boolean serverRendering = !SERVER_RENDERING_DISABLED.equals(request.getParameter(SERVER_RENDERING_PARAM));
 			String cacheString = null;
 			String path = resource.getPath();
-			String mappedPath = request.getResourceResolver().map(path);
+			String mappedPath = request.getResourceResolver().map(request, path);
 			if (serverRendering) {
 				final Object reactContext = request.getAttribute(REACT_CONTEXT_KEY);
-				RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(),
-						getWcmMode(request), scriptContext, renderAsJson, reactContext);
+				RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), getWcmMode(request),
+						scriptContext, renderAsJson, reactContext);
 				renderedHtml = result.html;
 				cacheString = result.cache;
 				request.setAttribute(REACT_CONTEXT_KEY, result.reactContext);
@@ -192,8 +192,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
 		String classString = (StringUtils.isNotEmpty(rootElementClass)) ? " class=\"" + rootElementClass + "\"" : "";
 		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
-				+ String.valueOf(serverRendering) + "\" data-react=\"app\" data-react-id=\"" + mappedPath + "_component\">"
-				+ renderedHtml + "</" + rootElementName + ">" + "<textarea id=\"" + mappedPath
+				+ String.valueOf(serverRendering) + "\" data-react=\"app\" data-react-id=\"" + mappedPath
+				+ "_component\">" + renderedHtml + "</" + rootElementName + ">" + "<textarea id=\"" + mappedPath
 				+ "_component\" style=\"display:none;\">" + jsonProps + "</textarea>";
 
 		return allHtml;
@@ -220,7 +220,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private RenderResult renderReactMarkup(String mappedPath, String resourceType, String wcmmode,
 			ScriptContext scriptContext, boolean renderAsJson, Object reactContext) {
 		JavascriptEngine javascriptEngine;
-		boolean removeMapper=false;
+		boolean removeMapper = false;
 		try {
 			SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
 			ResourceMapper resourceMapper = new ResourceMapper(request);
@@ -232,8 +232,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					enginePool.invalidateObject(javascriptEngine);
 					javascriptEngine = enginePool.borrowObject();
 				}
-				return javascriptEngine.render(mappedPath, resourceType, wcmmode, createCqx(scriptContext), renderAsJson,
-						reactContext);
+				return javascriptEngine.render(mappedPath, resourceType, wcmmode, createCqx(scriptContext),
+						renderAsJson, reactContext);
 			} finally {
 
 				try {
