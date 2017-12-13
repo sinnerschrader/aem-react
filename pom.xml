@@ -12,7 +12,7 @@
   <groupId>com.sinnerschrader.vw.aem.react</groupId>
   <artifactId>aem-react</artifactId>
   <packaging>pom</packaging>
-  <version>0.6.15</version>
+  <version>0.6.15.1-SNAPSHOT</version>
   <name>aem react</name>
   <description>aem react library and demo</description>
   <url>www.github.com/sinnerschrader/aem-react</url>
