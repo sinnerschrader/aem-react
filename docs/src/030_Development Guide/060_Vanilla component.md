@@ -1,5 +1,5 @@
 A vanilla react component can be registered
-as a AEM component as well.
+as a AEM component as well. It is the recommended way to write AEM components.
 
 ````typescript
 registry.registerVanilla({component: TextField});
@@ -42,23 +42,24 @@ For a simple component that only needs a single level of the resource tree
 
 If the resource's structure does not match the props of the vanilla component then a transformation can be used.
 A transformation is a function that is passed the resource and the resourceComponent and returns the props that will be passed to
-the react component.
+the react component. The props will be cached as json, so they cannot not have methods.
 
-In this example a sling model is used in the transformation:
+In this example a sling model is converted to json and returned as the props of the component:
 ````typescript
-let transform: any = (resource: any, wrapper: ResourceComponent<any, any, any>) => {
-    let model: ServiceProxy = r.getResourceModel("demop.core.models.MyModel");
-    let newProps: any = {title: resource.label};
-    newProps["imageSrc"] = model.invoke("getImageSrc");
-    return newProps;
+let transform: any = (api: JavaApi) => {
+    let model: ServiceProxy = api.getResourceModel("demop.core.models.MyModel").getObject();
+    return model;
 };
+
 
 registry.registerVanilla({
     component: myComponent, transform: transform
 });
 ````
 
-Resource transformations are only executed on the server. The result is cached and send to the client. 
+The transformation in the previous example is very simple. It is recommended because of its simplicity.
+More information on transformations can be found in the chapter [Transformation](ref:/Development Guide/Transformation).
+
 
 # Include vanilla wrapper
 

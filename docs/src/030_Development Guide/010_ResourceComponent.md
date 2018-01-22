@@ -3,6 +3,11 @@ resource (content). It also adds the necessary wrapper element, so that the comp
 can be edited in the author mode.
 
 
+> [[info]] __Recommendation__
+> 
+>  It is not recommended to use ResourceComponent directly. Rather use a plain react component
+> and a transformation as described in [Vanilla component](ref:/Development Guide/Vanilla component)
+
 The main method to implement in a ResourceComponent is `renderBody()`. It is called
 by the `render` method once the resource is successfully fetched. The resource is available via `this.getResource()`.
 
