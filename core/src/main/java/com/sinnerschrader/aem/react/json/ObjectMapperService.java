@@ -16,12 +16,13 @@ import org.osgi.service.component.ComponentContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sinnerschrader.aem.react.ReactScriptEngineFactory;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
+import com.sinnerschrader.aem.reactapi.json.JsonService;
 
 @Component(immediate = true, metatype = true)
 @Service(JsonService.class)
 @Properties({ //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resover", value = "^/content"), //
-		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern to include properties from resource mapping", value = "") //
+		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern to include properties from resource mapping") //
 })
 
 public class ObjectMapperService implements JsonService {

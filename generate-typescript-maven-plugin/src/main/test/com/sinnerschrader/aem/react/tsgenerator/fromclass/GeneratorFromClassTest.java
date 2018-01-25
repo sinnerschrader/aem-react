@@ -12,7 +12,7 @@ import com.sinnerschrader.aem.react.tsgenerator.descriptor.TypeDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.generator.PathMapper;
 import com.sinnerschrader.aem.react.tsgenerator.generator.TestModel;
 import com.sinnerschrader.aem.react.tsgenerator.generator.TestValue;
-import com.sinnerschrader.aem.react.typescript.Element;
+import com.sinnerschrader.aem.reactapi.typescript.Element;
 
 public class GeneratorFromClassTest {
 

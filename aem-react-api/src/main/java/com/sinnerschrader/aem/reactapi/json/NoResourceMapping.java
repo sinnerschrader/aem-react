@@ -1,4 +1,4 @@
-package com.sinnerschrader.aem.react.json;
+package com.sinnerschrader.aem.reactapi.json;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

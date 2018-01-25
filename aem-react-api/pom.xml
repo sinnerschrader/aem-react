@@ -32,7 +32,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                         <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>
+                         <Export-Package>com.sinnerschrader.aem.reactapi.*</Export-Package>
                     </instructions>
                 </configuration>
             </plugin>

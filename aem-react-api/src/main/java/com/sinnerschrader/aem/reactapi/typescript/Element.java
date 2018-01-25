@@ -1,4 +1,4 @@
-package com.sinnerschrader.aem.react.typescript;
+package com.sinnerschrader.aem.reactapi.typescript;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

@@ -45,7 +45,6 @@
                             antlr4-runtime,
                             rhino,
                             jsoup,
-                            aem-react-api,
                             metrics-core
                         </Embed-Dependency>
                         <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>

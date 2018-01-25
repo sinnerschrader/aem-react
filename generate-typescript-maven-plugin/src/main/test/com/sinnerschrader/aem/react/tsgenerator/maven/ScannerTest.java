@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.EnumDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.UnionType;
-import com.sinnerschrader.aem.react.typescript.ExportTs;
+import com.sinnerschrader.aem.reactapi.typescript.ExportTs;
 
 public class ScannerTest {
 	@Test

@@ -1,4 +1,4 @@
-package com.sinnerschrader.aem.react.json;
+package com.sinnerschrader.aem.reactapi.json;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 

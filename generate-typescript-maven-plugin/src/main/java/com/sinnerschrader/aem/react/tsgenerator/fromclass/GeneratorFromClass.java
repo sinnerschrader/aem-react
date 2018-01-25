@@ -24,7 +24,7 @@ import com.sinnerschrader.aem.react.tsgenerator.descriptor.ScanContext;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.TypeDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.UnionType;
 import com.sinnerschrader.aem.react.tsgenerator.generator.PathMapper;
-import com.sinnerschrader.aem.react.typescript.Element;
+import com.sinnerschrader.aem.reactapi.typescript.Element;
 
 public class GeneratorFromClass {
 	public static final Set<String> BLACKLIST = Collections.unmodifiableSet(new HashSet<String>() {
