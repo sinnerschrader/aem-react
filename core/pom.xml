@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.sinnerschrader.vw.aem.react</groupId>
         <artifactId>aem-react</artifactId>
-        <version>0.6.15.2-SNAPSHOT</version>
+        <version>0.6.15.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>core</artifactId>
