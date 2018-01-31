@@ -173,7 +173,7 @@ public class Sling {
 				actualDepth = depth.intValue();
 			}
 
-			Resource resource = request.getResourceResolver().resolve(request,path);
+			Resource resource = request.getResourceResolver().resolve(request, path);
 			if (resource == null) {
 				return null;
 			}
@@ -282,7 +282,7 @@ public class Sling {
 
 	private String normalizePath(SlingHttpServletRequest request, final String path) {
 		String actualPath = path;
-		if (!path.startsWith("/")) {
+		if (!path.startsWith("/") && !path.startsWith("http")) {
 			actualPath = request.getResource().getPath() + "/" + path;
 		}
 		return ResourceUtil.normalize(actualPath);
