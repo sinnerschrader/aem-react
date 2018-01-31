@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.Bindings;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -128,23 +127,19 @@ public class JavascriptEngine {
 		engine.put("console", new Console());
 		engine.put("Sling", sling);
 		this.loader = loader;
-		scriptChecksums = new HashMap<>();
-		updateJavascriptLibrary();
+		loadJavascriptLibrary();
 	}
 
-	private void updateJavascriptLibrary() {
+	private void loadJavascriptLibrary() {
 
+		scriptChecksums = new HashMap<>();
 		Iterator<HashedScript> iterator = loader.iterator();
-		boolean reload = false;
 		while (iterator.hasNext()) {
 			try {
 				HashedScript next = iterator.next();
-				String checksum = scriptChecksums.get(next.getId());
-				if (reload || checksum == null || !checksum.equals(next.getChecksum())) {
-					reload = true;
-					engine.eval(next.getScript());
-					scriptChecksums.put(next.getId(), next.getChecksum());
-				}
+				engine.eval(next.getScript());
+				scriptChecksums.put(next.getId(), next.getChecksum());
+
 			} catch (ScriptException e) {
 				throw new TechnicalException("cannot eval library script", e);
 			}
@@ -182,36 +177,15 @@ public class JavascriptEngine {
 		}
 	}
 
-	/**
-	 * check if the template associated with this resourceType is a react component
-	 *
-	 * @param resourceType
-	 * @return true if it is a react component
-	 */
-	public boolean isReactComponent(String resourceType) {
-		Invocable invocable = ((Invocable) engine);
-		try {
-			Bindings AemGlobal = (Bindings) engine.get("AemGlobal");
-			Object registry = AemGlobal.get("registry");
-			Object component = invocable.invokeMethod(registry, "getComponent", resourceType);
-			return component != null;
-		} catch (NoSuchMethodException | ScriptException e) {
-			throw new TechnicalException("cannot render react on server", e);
-		}
-	}
-
 	public ScriptEngine getEngine() {
 		return engine;
 	}
 
-	public void reloadScripts() {
-		updateJavascriptLibrary();
-
-	}
-
 	public boolean isScriptsChanged() {
 		Iterator<HashedScript> iterator = loader.iterator();
-		boolean reload = false;
+		if (!iterator.hasNext() && scriptChecksums.size() > 0) {
+			return true;
+		}
 		while (iterator.hasNext()) {
 			HashedScript next = iterator.next();
 			String checksum = scriptChecksums.get(next.getId());
