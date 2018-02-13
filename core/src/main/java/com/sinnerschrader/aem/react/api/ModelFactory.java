@@ -6,6 +6,7 @@ import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.slf4j.Logger;
@@ -118,22 +119,25 @@ public class ModelFactory {
 
 	public ModelFactory(ClassLoader classLoader, SlingHttpServletRequest request,
 			org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
-			ObjectMapper mapper) {
+			ObjectMapper mapper, ResourceResolver resourceResolver) {
 		super();
 		this.classLoader = classLoader;
 		this.request = request;
 		this.modelFactory = modelFactory;
 		this.adapterManager = adapterManager;
 		this.mapper = mapper;
+		this.resourceResolver = resourceResolver;
 	}
 
+	private ResourceResolver resourceResolver;
 	private SlingHttpServletRequest request;
 
 	private Resource getResource(String path) {
-		final Resource currentResource = request.getResourceResolver().resolve(request, path);
+
+		final Resource currentResource = resourceResolver.resolve(request, path);
 
 		if (currentResource == null) {
-			return new NonExistingResource(request.getResourceResolver(), path);
+			return new NonExistingResource(resourceResolver, path);
 		}
 		return currentResource;
 
@@ -176,7 +180,7 @@ public class ModelFactory {
 	 * @return
 	 */
 	public JsProxy createResourceModel(String path, String className) {
-		Resource resource = request.getResourceResolver().resolve(path);
+		Resource resource = resourceResolver.resolve(path);
 		if (resource == null) {
 			return null;
 		}

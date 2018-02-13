@@ -34,8 +34,11 @@ import com.sinnerschrader.aem.react.api.ModelFactory;
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
+import com.sinnerschrader.aem.react.json.ReactSlingHttpServletRequestWrapper;
 import com.sinnerschrader.aem.react.json.ResourceMapper;
 import com.sinnerschrader.aem.react.json.ResourceMapperLocator;
+import com.sinnerschrader.aem.react.json.ResourceResolverHelper;
+import com.sinnerschrader.aem.react.json.ResourceResolverHelperFactory;
 
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
@@ -56,6 +59,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private org.apache.sling.models.factory.ModelFactory modelFactory;
 	private AdapterManager adapterManager;
 	private ObjectMapper mapper;
+	private boolean disableMapping;
+	private boolean enableReverseMapping;
+	private boolean mangleNameSpaces;
 
 	/**
 	 * This class is the result of rendering a react component(-tree). It consists
@@ -73,7 +79,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
 			OsgiServiceFinder finder, DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName,
 			String rootElementClass, org.apache.sling.models.factory.ModelFactory modelFactory,
-			AdapterManager adapterManager, ObjectMapper mapper) {
+			AdapterManager adapterManager, ObjectMapper mapper, boolean enableReverseMapping, boolean disableMapping,
+			boolean mangleNameSpaces) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
 		this.enginePool = enginePool;
@@ -83,19 +90,31 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		this.rootElementClass = rootElementClass;
 		this.modelFactory = modelFactory;
 		this.mapper = mapper;
+		this.disableMapping = disableMapping;
+		this.enableReverseMapping = enableReverseMapping;
+		this.mangleNameSpaces = mangleNameSpaces;
 	}
 
 	@Override
 	public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
 		ClassLoader old = Thread.currentThread().getContextClassLoader();
+
+		Bindings bindings = getBindings(scriptContext);
+		SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+		SlingHttpServletRequest originalRequest = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+		SlingHttpServletRequest request;
+		if (enableReverseMapping) {
+			ResourceResolverHelper resolverHelper = ResourceResolverHelperFactory.create(originalRequest,
+					mangleNameSpaces);
+			request = new ReactSlingHttpServletRequestWrapper(originalRequest, resolverHelper);
+			bindings.put(SlingBindings.REQUEST, request);
+		} else {
+			request = originalRequest;
+		}
+		SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
 		try {
 
 			Thread.currentThread().setContextClassLoader(((ReactScriptEngineFactory) getFactory()).getClassLoader());
-
-			Bindings bindings = getBindings(scriptContext);
-			SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-			SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-			SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
 			boolean renderAsJson = Arrays.asList(request.getRequestPathInfo().getSelectors()).indexOf("json") >= 0;
 			Resource resource = request.getResource();
 
@@ -118,7 +137,13 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			boolean serverRendering = !SERVER_RENDERING_DISABLED.equals(request.getParameter(SERVER_RENDERING_PARAM));
 			String cacheString = null;
 			String path = resource.getPath();
-			String mappedPath = request.getResourceResolver().map(request, path);
+			String mappedPath;
+			if (!disableMapping) {
+				mappedPath = request.getResourceResolver().map(request, path);
+				mappedPath = ResourceResolverUtils.getUriPath(mappedPath);
+			} else {
+				mappedPath = path;
+			}
 			if (serverRendering) {
 				final Object reactContext = request.getAttribute(REACT_CONTEXT_KEY);
 				RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), getWcmMode(request),
@@ -204,7 +229,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingScriptHelper sling = (SlingScriptHelper) getBindings(ctx).get(SlingBindings.SLING);
 
 		ClassLoader classLoader = dynamicClassLoaderManager.getDynamicClassLoader();
-		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, mapper);
+		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, mapper,
+				request.getResourceResolver());
 		return new Cqx(new Sling(ctx), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
 	}
 

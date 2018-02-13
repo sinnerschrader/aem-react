@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+import com.sinnerschrader.aem.react.ResourceResolverUtils;
 
 public class StringSerializer extends JsonSerializer<String> implements ContextualSerializer {
 
@@ -39,7 +40,7 @@ public class StringSerializer extends JsonSerializer<String> implements Contextu
 				gen.writeString(value);
 				LOGGER.error("no instance of resourceResolver bound to thread");
 			} else {
-				gen.writeString(mapper.map(value));
+				gen.writeString(ResourceResolverUtils.getUriPath(mapper.map(value)));
 			}
 		} else {
 			gen.writeString(value);
