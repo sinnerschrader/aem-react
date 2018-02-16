@@ -105,7 +105,7 @@ public class IntegrationTest {
 		jsEngine.initialize(loader, new Sling(scriptContext));
 
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService());
+				"test xxx", null, null, null, new ComponentMetricsService(), false, false,false);
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		StringWriter writer = new StringWriter();
 		scriptContext.setWriter(writer);

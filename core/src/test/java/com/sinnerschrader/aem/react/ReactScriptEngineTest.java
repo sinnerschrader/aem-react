@@ -92,7 +92,7 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService());
+				"test xxx", null, null, null, new ComponentMetricsService(), false, false, false);
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		ScriptContext scriptContext = new SimpleScriptContext();
 		StringWriter writer = new StringWriter();
