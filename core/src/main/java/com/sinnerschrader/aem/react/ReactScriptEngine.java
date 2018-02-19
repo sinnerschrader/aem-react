@@ -12,7 +12,6 @@ import javax.script.ScriptException;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.AdapterManager;
@@ -284,10 +283,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	public void stop() {
 		enginePool.close();
-	}
-
-	public static void main(String[] args) {
-		System.out.println(Text.escapeIllegalJcrChars("[]"));
 	}
 
 }
