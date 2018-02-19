@@ -210,8 +210,6 @@
             <artifactId>metrics-core</artifactId>
             <version>3.2.5</version>
         </dependency>
-
-
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -230,7 +228,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <scope>test</scope>
-            <version>1.9.12</version>
         </dependency>
     </dependencies>
 </project>

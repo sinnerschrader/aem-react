@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -96,10 +97,9 @@ public class IntegrationTest {
 	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
 		JavascriptEngine jsEngine = new JavascriptEngine();
 
-		String script = "var AemGlobal = {}; AemGlobal.renderReactComponent = function() {return {state:'{}',html:'',reactContext:{}};};";
-		List<HashedScript> scripts = new ArrayList<>();
-		scripts.add(new HashedScript("ff", script, "/script"));
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
+		Mockito.when(loader.iterator()).thenAnswer((InvocationOnMock mock) -> {
+			return createScripts().iterator();
+		});
 
 		ScriptContext scriptContext = new SimpleScriptContext();
 		jsEngine.initialize(loader, new Sling(scriptContext));
@@ -146,6 +146,14 @@ public class IntegrationTest {
 		Assert.assertEquals(path + "_component", wrapper.attr("data-react-id"));
 		Assert.assertEquals(path + "_component", textarea.attr("id"));
 
+	}
+
+	private List<HashedScript> createScripts() {
+		String script = "var AemGlobal = {}; AemGlobal.renderReactComponent = function() {return {state:'{}',html:'',reactContext:{}};};";
+
+		List<HashedScript> scripts = new ArrayList<>();
+		scripts.add(new HashedScript("ff", script, "/script"));
+		return scripts;
 	}
 
 }
