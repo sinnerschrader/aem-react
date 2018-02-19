@@ -1,5 +1,6 @@
 package com.sinnerschrader.aem.react.api;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -9,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -52,9 +55,7 @@ public class JsProxy {
 		try {
 			Method method = methods.get(name);
 			Object returnValue = method.invoke(target, args);
-			StringWriter stringWriter = new StringWriter();
-			mapper.writeValue(stringWriter, returnValue);
-			return stringWriter.toString();
+			return writeValue(returnValue);
 		} catch (Exception e) {
 			LOGGER.error("cannot invoke proxied method " + name, e);
 			throw e;
@@ -72,13 +73,17 @@ public class JsProxy {
 		try {
 			Method method = methods.get("get" + StringUtils.capitalize(name));
 			Object returnValue = method.invoke(target, new Object[0]);
-			StringWriter stringWriter = new StringWriter();
-			mapper.writeValue(stringWriter, returnValue);
-			return stringWriter.toString();
+			return writeValue(returnValue);
 		} catch (Exception e) {
 			LOGGER.error("cannot invoke proxied method " + name, e);
 			throw e;
 		}
+	}
+
+	private String writeValue(Object returnValue) throws IOException, JsonGenerationException, JsonMappingException {
+		StringWriter stringWriter = new StringWriter();
+		mapper.writeValue(stringWriter, returnValue);
+		return stringWriter.toString();
 	}
 
 	/**
@@ -94,12 +99,6 @@ public class JsProxy {
 		} catch (Exception e) {
 			LOGGER.error("cannot serialize object", e);
 			throw e;
-		}
-	}
-
-	public static class Api {
-		public void execute(Object arg) {
-			System.out.println(arg);
 		}
 	}
 

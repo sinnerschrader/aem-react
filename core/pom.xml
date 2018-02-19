@@ -210,6 +210,7 @@
             <artifactId>metrics-core</artifactId>
             <version>3.2.5</version>
         </dependency>
+<<<<<<< HEAD
 
 
         <!-- Testing -->
@@ -230,6 +231,11 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.sling-mock</artifactId>
             <scope>test</scope>
+=======
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.sling-mock</artifactId>
+>>>>>>> fcfd881... chore: add tests (#72)
             <version>1.9.12</version>
         </dependency>
     </dependencies>
