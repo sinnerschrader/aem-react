@@ -48,6 +48,7 @@
                             metrics-core
                         </Embed-Dependency>
                         <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>
+                        <Import-Package>!org.apache.sling.resource,*</Import-Package>
                         <Sling-Model-Packages />
                     </instructions>
                 </configuration>

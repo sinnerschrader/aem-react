@@ -31,6 +31,9 @@ public class ResourceResolverHelperFactoryTest {
 	@Mock
 	private Resource resource;
 
+	@Mock
+	private Resource resolvedResource;
+
 	@Before
 	public void before() {
 
@@ -59,6 +62,18 @@ public class ResourceResolverHelperFactoryTest {
 		ResourceResolverHelper helper = ResourceResolverHelperFactory.createHelper(request, true);
 
 		Assert.assertEquals("/content/en/william.html", helper.resolveInternally("/en/william.html"));
+	}
+
+	@Test
+	public void test() {
+		expectRequestURI("/de/index.s1.html/ahdgasdasd");
+		expectMappingPrefix("", "/content");
+		expectResourcePath("/content/de/index/jcr:content/teaser");
+		Mockito.when(resolver.resolve("/content/en/william.html")).thenReturn(resolvedResource);
+
+		ResourceResolver resolver = ResourceResolverHelperFactory.create(request, true);
+
+		Assert.assertEquals(resolvedResource, resolver.resolve("/en/william.html"));
 	}
 
 	@Test

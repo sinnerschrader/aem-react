@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
-public class ResourceResolverHelper {
+public class ResourceResolverHelper extends ResourceResolverWrapper{
 
 	private String prefix;
 	private ResourceResolver delegate;
@@ -26,7 +26,7 @@ public class ResourceResolverHelper {
 	}
 
 	public ResourceResolverHelper(String prefix, ResourceResolver delegate) {
-		super();
+		super(delegate);
 		this.prefix = prefix;
 		this.delegate = delegate;
 	}

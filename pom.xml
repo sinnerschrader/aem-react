@@ -63,7 +63,7 @@
         <vault.password>admin</vault.password>
         <java.version>1.8</java.version>
         <sling.version>2.11.0</sling.version>
-        <jackson.version>2.6.3</jackson.version>
+        <jackson.version>2.5.3</jackson.version>
     </properties>
     <build>
         <plugins>

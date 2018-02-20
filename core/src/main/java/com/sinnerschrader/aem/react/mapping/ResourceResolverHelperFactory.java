@@ -1,8 +1,5 @@
 package com.sinnerschrader.aem.react.mapping;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Matcher;
@@ -35,19 +32,9 @@ public class ResourceResolverHelperFactory {
 		final ResourceResolver resourceResolver = request.getResourceResolver();
 		ResourceResolverHelper resolver = createHelper(request, mangleNameSpaces);
 		if (resolver != null) {
-			return (ResourceResolver) Proxy.newProxyInstance(ResourceResolverHelperFactory.class.getClassLoader(),
-					new Class[] { ResourceResolver.class }, new InvocationHandler() {
-						@Override
-						public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-							if (method.getName().equals("resolve")) {
-								return method.invoke(resolver, args);
-							}
-							return method.invoke(resourceResolver, args);
-						}
-					});
+			return resolver;
 		}
 		return resourceResolver;
-
 	}
 
 	public static String mangleNamespaces(String path) {
