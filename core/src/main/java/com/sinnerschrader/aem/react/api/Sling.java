@@ -286,7 +286,7 @@ public class Sling {
 
 	private String normalizePath(SlingHttpServletRequest request, final String path) {
 		String actualPath = path;
-		if (!path.startsWith("/")) {
+		if (!path.startsWith("/") && !path.startsWith("http")) {
 			actualPath = request.getResource().getPath() + "/" + path;
 		}
 		return ResourceUtil.normalize(actualPath);

@@ -39,6 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sinnerschrader.aem.react.JavacriptEnginePoolFactory;
+import com.sinnerschrader.aem.react.JavascriptEngine;
+import com.sinnerschrader.aem.react.ReactScriptEngine;
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ObjectMapperFactory;
@@ -56,10 +59,13 @@ import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name of the", value = "div"), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOR_CLASS_NAME, label = "the root element class name", value = ""), //
-		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resover", value = "^/content"), //
-		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern to include properties from resource mapping", value = "") //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name", value = "div"), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_CLASS_NAME, label = "the root element class name", value = ""), //
+		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resolver", value = "^/content"), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_ENABLE_REVERSE_MAPPING, label = "incoming sling mapping is not supported", description = "If the incoming sling mapping is not supported, then this optioen will make sure aem react works as expected", boolValue = false), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_MAPPING_DISABLE, label = "Disable sling mapping in react completely", description = "check this option to disable sling mapping in aem react.", boolValue = false), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_MANGLE_NAMESPACES, label = "mangles namespaces", description = "tell aemr eact how slingmapping handles namespace mangling.", boolValue = true), //
+		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = "") //
 })
 public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
@@ -67,7 +73,10 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
 	public static final String PROPERTY_POOL_TOTAL_SIZE = "pool.total.size";
 	public static final String PROPERTY_ROOT_ELEMENT_NAME = "root.element.name";
-	public static final String PROPERTY_ROOR_CLASS_NAME = "root.element.class.name";
+	public static final String PROPERTY_ROOT_CLASS_NAME = "root.element.class.name";
+	public static final String PROPERTY_ENABLE_REVERSE_MAPPING = "mapping.reverse.enable";
+	public static final String PROPERTY_MAPPING_DISABLE = "mapping.disable";
+	public static final String PROPERTY_MANGLE_NAMESPACES = "mapping.mangle.namespaces";
 	public static final String JSON_RESOURCEMAPPING_INCLUDE_PATTERN = "json.resourcemapping.include.pattern";
 	public static final String JSON_RESOURCEMAPPING_EXCLUDE_PATTERN = "json.resourcemapping.exclude.pattern";
 
@@ -107,6 +116,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	@Reference
 	private RepositoryConnectionFactory repositoryConnectionFactory;
+	private boolean disableMapping;
+	private boolean enableReverseMapping;
 
 	public synchronized void createScripts() {
 		List<HashedScript> newScripts = new LinkedList<>();
@@ -181,21 +192,28 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		int poolTotalSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TOTAL_SIZE), 20);
 		String rootElementName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_ELEMENT_NAME),
 				"div");
-		String rootElementClassName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOR_CLASS_NAME),
+		String rootElementClassName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_CLASS_NAME),
 				"");
+		boolean mangleNameSpaces = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MANGLE_NAMESPACES),
+				true);
+		this.disableMapping = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MAPPING_DISABLE), false);
+		this.enableReverseMapping = !disableMapping
+				&& PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_ENABLE_REVERSE_MAPPING), false);
 		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(
 				createLoader(scriptResources), null);
 
-		String includePattern = PropertiesUtil
-				.toString(context.getProperties().get(JSON_RESOURCEMAPPING_INCLUDE_PATTERN), "^/content");
-		String excludePattern = PropertiesUtil
-				.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
+		String includePattern = disableMapping ? null
+				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_INCLUDE_PATTERN),
+						"^/content");
+		String excludePattern = disableMapping ? null
+				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
 
 		ObjectMapper mapper = new ObjectMapperFactory().create(includePattern, excludePattern);
 
 		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, javacriptEnginePoolFactory);
 		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
-				rootElementClassName, modelFactory, adapterManager, mapper, metricsService);
+				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping, disableMapping,
+				mangleNameSpaces);
 		this.createScripts();
 
 		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory,
