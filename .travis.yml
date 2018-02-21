@@ -16,9 +16,11 @@ install:
 script: 
  - mvn verify -Dgpg.skip=true
  - ./docs/deploy.sh
+ 
+after_success:
+
 env:
   global:
   - ENCRYPTION_LABEL: "7345bb60ed89"
-  matrix:	
+  matrix:
   - TRAVIS_NODE_VERSION="5"
-  
