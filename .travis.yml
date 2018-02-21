@@ -18,7 +18,9 @@ script:
  - ./docs/deploy.sh
  
 after_success:
-
+ - bash <(curl -s  https://codecov.io/bash)
+ 
+ 
 env:
   global:
   - ENCRYPTION_LABEL: "7345bb60ed89"
