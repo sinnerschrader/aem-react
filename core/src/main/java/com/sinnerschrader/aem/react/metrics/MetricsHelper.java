@@ -1,7 +1,5 @@
 package com.sinnerschrader.aem.react.metrics;
 
-import com.sinnerschrader.aem.react.DefaultComponentMetrics;
-
 public class MetricsHelper {
 	public static ComponentMetrics getCurrent() {
 		ComponentMetrics current = DefaultComponentMetrics.getCurrent();

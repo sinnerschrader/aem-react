@@ -1,9 +1,11 @@
 @startuml
 
+title Loading content synchronuously on server or client
 
 React -> ResourceComponent: componentWillMount()
 activate ResourceComponent
 ResourceComponent -> Sling: subscribe(this.getPath(), this, {deph: this.getDepth()})
+Sling -> Sling: get data from cache or update cache \nfrom Java synchronuously
 Sling --> ResourceComponent : json
 ResourceComponent -> ResourceComponent: setState({state: STATE.LOADED})
 activate ResourceComponent

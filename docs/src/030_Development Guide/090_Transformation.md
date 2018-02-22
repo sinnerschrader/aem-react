@@ -39,5 +39,5 @@ let transform: any = (api: JavaApi) => {
 The java objects are converted to json via [Jackson](www.fasterxml.com). The conversion
 can be customized via the documented annoations.
 
-Also The Conversion can map all properties that are resource paths to the external form via
+Also the conversion can map all properties that are resource paths to the external form via
 `ResourceResolver.map`. Read more about this in [Links](ref:/Development Guide/Links).
