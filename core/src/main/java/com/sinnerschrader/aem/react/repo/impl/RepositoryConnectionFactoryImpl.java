@@ -28,7 +28,6 @@ public class RepositoryConnectionFactoryImpl implements RepositoryConnectionFact
       ResourceResolver administrativeResourceResolver;
       if (StringUtils.isNotEmpty(subServiceName)) {
         Map<String, Object> authInfo = Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, (Object) subServiceName);
-
         administrativeResourceResolver = resResFactory.getServiceResourceResolver(authInfo);
       } else {
         administrativeResourceResolver = resResFactory.getAdministrativeResourceResolver(null);
