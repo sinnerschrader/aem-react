@@ -62,7 +62,7 @@
         <vault.user>admin</vault.user>
         <vault.password>admin</vault.password>
         <java.version>1.8</java.version>
-        <sling.version>2.11.0</sling.version>
+        <sling.version>2.16.2</sling.version>
         <jackson.version>2.5.3</jackson.version>
     </properties>
     <build>
@@ -449,7 +449,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.9.6</version>
+                <version>1.9.12</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -461,13 +461,13 @@
             <dependency>
                 <groupId>org.osgi</groupId>
                 <artifactId>org.osgi.core</artifactId>
-                <version>4.2.0</version>
+                <version>5.0.0</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
                 <artifactId>org.osgi.compendium</artifactId>
-                <version>4.2.0</version>
+                <version>5.0.0</version>
                 <scope>provided</scope>
             </dependency>
             <!-- Logging Dependencies -->
@@ -561,7 +561,7 @@
                 <groupId>org.apache.sling</groupId>
                 <artifactId>org.apache.sling.testing.sling-mock</artifactId>
                 <scope>test</scope>
-                <version>1.9.12</version>
+                <version>2.2.0</version>
             </dependency>
 
             <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
