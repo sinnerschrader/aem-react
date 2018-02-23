@@ -52,7 +52,7 @@
                             org.apache.sling.api.resource;version=!,
                             org.apache.sling.api.scripting;version=!,
                             org.apache.sling.commons.osgi;version=!,
-                            org.apache.sling.models.factory;version="[1.1,1.4)",
+                            org.apache.sling.models.factory;version=!,
                             org.apache.sling.scripting.api;version=!,
                             com.day.cq.wcm.api;version=!,
                             com.day.cq.wcm.api.components;version=!,
