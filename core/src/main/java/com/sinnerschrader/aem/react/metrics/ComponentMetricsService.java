@@ -54,12 +54,6 @@ public class ComponentMetricsService {
 
 	}
 
-	public ComponentMetrics getCurrent() {
-		if (enabled) {
-			return DefaultComponentMetrics.getCurrent();
-		}
-		return NO_OP;
-	}
 
 	@Activate
 	public void start(Map<String, Object> dictionary) {

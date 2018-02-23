@@ -3,6 +3,7 @@ package com.sinnerschrader.aem.react.metrics;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class ComponentMetricsServiceTest {
 		Map map = new HashMap<String, Object>() {
 			{
 				this.put("metrics.enabled", true);
-				this.put("metrics.jmx.enabled", false);
+				this.put("metrics.jmx.enabled", true);
 			}
 		};
 		context.registerService(ComponentMetricsService.class, new ComponentMetricsService(), map);
@@ -55,6 +56,36 @@ public class ComponentMetricsServiceTest {
 		ComponentMetricsService service = context.getService(ComponentMetricsService.class);
 		service.start(map);
 		service.stop();
+	}
+
+	@Test
+	public void testCreateResourceEnabled() throws InterruptedException {
+		Map map = new HashMap<String, Object>() {
+			{
+				this.put("metrics.enabled", true);
+			}
+		};
+		context.registerService(ComponentMetricsService.class, new ComponentMetricsService(), map);
+		ComponentMetricsService service = context.getService(ComponentMetricsService.class);
+		service.start(map);
+
+		Resource resource = context.create().resource("/test","sling:resourceType","/apps/test");
+		ComponentMetrics metrics = service.create(resource);
+	}
+
+	@Test
+	public void testCreateResourceDisabled() throws InterruptedException {
+		Map map = new HashMap<String, Object>() {
+			{
+				this.put("metrics.enabled", false);
+			}
+		};
+		context.registerService(ComponentMetricsService.class, new ComponentMetricsService(), map);
+		ComponentMetricsService service = context.getService(ComponentMetricsService.class);
+		service.start(map);
+
+		Resource resource = context.create().resource("/test");
+		ComponentMetrics metrics = service.create(resource);
 	}
 
 
