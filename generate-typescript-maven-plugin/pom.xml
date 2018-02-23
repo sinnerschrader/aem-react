@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.sinnerschrader.vw.aem.react</groupId>
         <artifactId>aem-react</artifactId>
-        <version>0.22.1-SNAPSHOT</version>
+        <version>0.23.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>generate-typescript-maven-plugin</artifactId>
