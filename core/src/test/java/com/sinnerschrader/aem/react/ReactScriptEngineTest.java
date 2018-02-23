@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
+import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -188,7 +189,141 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
-	public void testEvalNoINcomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
+	public void testEvalServerRenderingDisabled() throws NoSuchElementException, IllegalStateException, Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+
+
+		RenderResult result = expectResult();
+
+		String resourceType = "/apps/test";
+		String path = "/content/page/test";
+
+		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		slingContext.currentResource(resource);
+
+		slingContext.request().setQueryString("serverRendering=disabled");
+
+		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
+				Mockito.anyObject(), Matchers.eq(false), Matchers.eq(null), Matchers.eq(new ArrayList<>())))
+				.thenReturn(result);
+		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
+		Assert.assertNull(renderResult);
+		String renderedHtml = getRenderedHtml();
+
+		Document doc = Jsoup.parse(renderedHtml);
+
+		Element wrapper = getWrapper(doc);
+
+		Assert.assertEquals("test xxx", wrapper.attr("class"));
+		Assert.assertEquals("span", wrapper.nodeName());
+
+		Element textarea = getTextarea(doc);
+		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
+		Assert.assertEquals(path + "_component", wrapper.attr("data-react-id"));
+		Assert.assertEquals(path + "_component", textarea.attr("id"));
+
+	}
+
+
+
+
+
+	@Test
+	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+
+
+
+		String resourceType = "/apps/test";
+		String path = "/content/page/test";
+
+		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		slingContext.currentResource(resource);
+		slingContext.request().setAttribute(Sling.ATTRIBUTE_AEM_REACT_DIALOG, true);
+
+
+		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
+		Assert.assertNull(renderResult);
+		String renderedHtml = getRenderedHtml();
+
+
+		Assert.assertEquals("",renderedHtml);
+
+	}
+
+	@Test
+	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+
+
+
+		slingContext.requestPathInfo().setSelectorString("json");
+
+
+
+		RenderResult result = expectResult();
+
+		String resourceType = "/apps/test";
+		String path = "/content/page/test";
+
+		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		slingContext.currentResource(resource);
+
+
+		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
+				Mockito.anyObject(), Matchers.eq(true), Matchers.eq(null), Matchers.eq(new ArrayList() {{add("json");}})))
+				.thenReturn(result);
+		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
+		Assert.assertNull(renderResult);
+		String renderedHtml = getRenderedHtml();
+
+		Assert.assertEquals("{\"cache\":true}", renderedHtml);
+
+
+
+	}
+
+	@Test
+	public void testEvalJsonOnlyNoServerRendering() throws NoSuchElementException, IllegalStateException, Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+
+
+
+		slingContext.requestPathInfo().setSelectorString("json");
+		slingContext.request().setQueryString("serverRendering=disabled");
+
+
+		RenderResult result = expectResult();
+
+		String resourceType = "/apps/test";
+		String path = "/content/page/test";
+
+		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		slingContext.currentResource(resource);
+
+
+		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
+				Mockito.anyObject(), Matchers.eq(true), Matchers.eq(null), Matchers.eq(new ArrayList() {{add("json");}})))
+				.thenReturn(result);
+		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
+		Assert.assertNull(renderResult);
+		String renderedHtml = getRenderedHtml();
+
+		Assert.assertEquals("{\"resources\":{\"/content/page/test\":{\"depth\":-1,\"data\":{\"sling:resourceType\":\"/apps/test\"}}}}", renderedHtml);
+
+
+
+	}
+
+
+	@Test
+	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), true, false, false);
 
