@@ -48,12 +48,24 @@
                             metrics-core
                         </Embed-Dependency>
                         <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>
-                        <Import-Package>!org.apache.sling.resource,*</Import-Package>
+                        <Import-Package>
+                            org.apache.sling.api.resource;version=!,
+                            org.apache.sling.api.scripting;version=!,
+                            org.apache.sling.commons.osgi;version=!,
+                            org.apache.sling.models.factory;version="[1.1,1.4)",
+                            org.apache.sling.scripting.api;version=!,
+                            com.day.cq.wcm.api;version=!,
+                            com.day.cq.wcm.api.components;version=!,
+                            *
+                        </Import-Package>
                         <Sling-Model-Packages />
                     </instructions>
                 </configuration>
             </plugin>
+<!--
+                            org.apache.sling.resource;version=!,
 
+-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -132,13 +144,6 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr</artifactId>
-        </dependency>
-
-
-
         <!-- OSGi Dependencies -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -180,7 +185,9 @@
         </dependency>
         <dependency>
             <groupId>com.adobe.aem</groupId>
-            <artifactId>aem-api</artifactId>
+            <artifactId>uber-jar</artifactId>
+            <classifier>apis</classifier>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.sling</groupId>
