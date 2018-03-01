@@ -13,10 +13,11 @@ deactivate ResourceComponent
 ResourceComponent --> React
 deactivate ResourceComponent
 
+Server -> Server: render Component
+Server --> ClientSling: partial cache of component as json
 
-Server --> ClientSling: resource
 deactivate Server
-
+ClientSling -> ClientSling: update cache
 ClientSling -> ResourceComponent: changedResource(path: resource)
 activate ResourceComponent
 ResourceComponent -> ResourceComponent: setState({state: STATE.LOADED})

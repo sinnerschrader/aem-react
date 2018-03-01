@@ -17,6 +17,12 @@ includePattern=^/content
 excludePattern=^/content/dam
 ````
 
+> __Sling Mapping Configuration__ [[info]]
+>
+> In some setups the sling mapping might not be configured to support `ResourceResolver.map()` 
+> and `ResourceResolver.resolve()` but only the former. Please read more about that in [Configuration](ref:/Configuration/OSGI).
+>
+
 
 
 
