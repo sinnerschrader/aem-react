@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 
 public class ResourceResolverHelper extends ResourceResolverWrapper{
 
@@ -14,11 +15,20 @@ public class ResourceResolverHelper extends ResourceResolverWrapper{
 
 
 	public Resource resolve(HttpServletRequest arg0, String arg1) {
-		return delegate.resolve(arg0, resolveInternally(arg1));
+		Resource resource = delegate.resolve(arg0, arg1);
+		if (ResourceUtil.isNonExistingResource(resource)) {
+			return delegate.resolve(arg0, resolveInternally(arg1));
+		}
+		return resource;
+
 	}
 
 	public Resource resolve(String arg0) {
-		return delegate.resolve(resolveInternally(arg0));
+		Resource resource = delegate.resolve(arg0);
+		if (ResourceUtil.isNonExistingResource(resource)) {
+			return delegate.resolve(resolveInternally(arg0));
+		}
+		return resource;
 	}
 
 	public Resource resolve(HttpServletRequest arg0) {
