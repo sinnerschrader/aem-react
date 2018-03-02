@@ -1,0 +1,47 @@
+{
+  "name": "ngw-yat",
+  "version": "0.0.0-development",
+  "private": true,
+  "scripts": {
+    "start": "webpack"
+  },
+  "dependencies": {
+    "@types/prop-types": "15.5.2",
+    "@types/react": "16.0.18",
+    "@types/react-addons-shallow-compare": "0.14.20",
+    "@types/react-dom": "16.0.2",
+    "classnames": "2.2.5",
+    "react": "16.0.0",
+    "react-dom": "16.0.0",
+    "aem-react-js": "0.21.0"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "4.0.1",
+    "css-loader": "0.28.4",
+    "enzyme": "3.1.0",
+    "enzyme-adapter-react-16": "1.0.2",
+    "extract-text-webpack-plugin": "3.0.0",
+    "filemanager-webpack-plugin": "1.0.9",
+    "find-in-files": "0.4.0",
+    "jest": "20.0.4",
+    "less": "2.7.2",
+    "less-loader": "4.0.5",
+    "less-plugin-autoprefix": "1.5.1",
+    "less-plugin-npm-import": "2.1.0",
+    "npm-run-all": "4.0.2",
+    "postcss-class-prefix": "0.3.0",
+    "postcss-loader": "2.0.6",
+    "prettier": "1.5.2",
+    "prop-types": "15.6.0",
+    "reflect-metadata": "0.1.10",
+    "style-loader": "0.18.2",
+    "ts-config": "10.0.1",
+    "ts-jest": "20.0.7",
+    "ts-loader": "2.2.2",
+    "tslib": "1.7.1",
+    "tslint": "5.8.0",
+    "typescript": "2.4.1",
+    "webdav-sync": "0.5.0",
+    "webpack": "3.2.0"
+  }
+}
