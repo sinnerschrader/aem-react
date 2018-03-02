@@ -50,7 +50,7 @@ public class ObjectMapperServiceTest {
 		Mockito.when(ctx.getProperties()).thenReturn(props);
 		ObjectMapperService service = new ObjectMapperService();
 		service.activate(ctx, null);
-		String value = service.write(new TestModel("hi"), new MockSlingHttpServletRequest());
+		String value = service.write(new TestModel("hi"), new MockSlingHttpServletRequest(null, null));
 		Assert.assertEquals("{\"content\":\"hi\"}", value);
 	}
 
