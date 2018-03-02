@@ -145,4 +145,23 @@ public class JavascriptEngineTest {
 		Assert.assertEquals(reactContext, result.reactContext);
 	}
 
+	@Test
+	public void testConsole() {
+		JavascriptEngine.Console console = new JavascriptEngine.Console();
+		console.debug("test", null);
+		console.debug("test", "","");
+		console.info("test", null);
+		console.info("test");
+		console.error("test", null);
+		console.error("test");
+		console.log("test", null);
+		console.log("test");
+		console.warn("test", null);
+		console.warn("test");
+		console.time("test");
+		console.timeEnd("test");
+
+
+	}
+
 }

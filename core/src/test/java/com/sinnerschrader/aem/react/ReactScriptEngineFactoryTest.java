@@ -80,13 +80,40 @@ public class ReactScriptEngineFactoryTest {
 	@Test
 	public void test() throws UnsupportedRepositoryOperationException, RepositoryException {
 
+		createProperties();
+		factory.initialize(componentContext, null);
+	}
+
+	private void createProperties() throws UnsupportedRepositoryOperationException, RepositoryException {
 		Dictionary<String, Object> properties = new Hashtable<>();
 		properties.put(ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, new String[] { "/scripts/test.js" });
 		Mockito.when(componentContext.getProperties()).thenReturn(properties);
 		Mockito.when(scriptLoader.loadJcrScript("/scripts/test.js", "")).thenReturn(new StringReader(""));
 		Mockito.when(repositoryConnectionFactory.getConnection("")).thenReturn(repositoryConnection);
 		Mockito.when(repositoryConnection.getObservationManager()).thenReturn(observationManager);
-		factory.initialize(componentContext, null);
 	}
 
+	@Test
+	public void testBindDynamicClassLoaderManager() {
+		factory.bindDynamicClassLoaderManager(dynamicClassLoaderManager);
+	}
+
+	@Test
+	public void testUnbindDynamicClassLoaderManager() {
+		factory.unbindDynamicClassLoaderManager(dynamicClassLoaderManager);
+	}
+
+	@Test
+	public void testStop() throws RepositoryException {
+		createProperties();
+		factory.initialize(componentContext, null);
+		factory.stop();
+	}
+
+	@Test
+	public void testReconfigure() throws RepositoryException {
+		createProperties();
+		factory.initialize(componentContext, null);
+		factory.reconfigure(componentContext, null);
+	}
 }
