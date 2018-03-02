@@ -1,11 +1,13 @@
 package com.sinnerschrader.aem.react.repo.impl;
 
-import com.day.cq.wcm.api.PageManager;
-
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.observation.ObservationManager;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
+import com.day.cq.wcm.api.PageManager;
 import com.sinnerschrader.aem.react.repo.RepositoryConnection;
 
 public class RepositoryConnectionImpl implements RepositoryConnection {
@@ -34,6 +36,11 @@ public class RepositoryConnectionImpl implements RepositoryConnection {
 	@Override
 	public Session getSession() {
 		return resourceResolver.adaptTo(Session.class);
+	}
+
+	@Override
+	public ObservationManager getObservationManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+		return getSession().getWorkspace().getObservationManager();
 	}
 
 }

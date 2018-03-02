@@ -18,7 +18,6 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Slf4jReporter;
-import com.sinnerschrader.aem.react.DefaultComponentMetrics;
 
 @Service(ComponentMetricsService.class)
 @Component(immediate = true, metatype = true)
@@ -55,12 +54,6 @@ public class ComponentMetricsService {
 
 	}
 
-	public ComponentMetrics getCurrent() {
-		if (enabled) {
-			return DefaultComponentMetrics.getCurrent();
-		}
-		return NO_OP;
-	}
 
 	@Activate
 	public void start(Map<String, Object> dictionary) {

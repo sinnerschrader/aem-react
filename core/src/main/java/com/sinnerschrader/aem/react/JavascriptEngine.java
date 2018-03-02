@@ -39,7 +39,7 @@ public class JavascriptEngine {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
-	public class Console {
+	public static class Console {
 
 		public Console() {
 			super();

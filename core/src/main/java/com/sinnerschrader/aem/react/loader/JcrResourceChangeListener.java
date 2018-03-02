@@ -59,7 +59,7 @@ public class JcrResourceChangeListener implements EventListener {
 	public void activate(String[] paths) {
 		this.repositoryConnection = this.repositoryConnectionFactory.getConnection(subServiceName);
 		try {
-			this.observationManager = this.repositoryConnection.getSession().getWorkspace().getObservationManager();
+			this.observationManager = this.repositoryConnection.getObservationManager();
 
 			final String[] types = { "nt:unstructured", "nt:resource" };
 			final int eventTypes = Event.PROPERTY_CHANGED | Event.NODE_ADDED | Event.PROPERTY_ADDED;
@@ -68,7 +68,7 @@ public class JcrResourceChangeListener implements EventListener {
 				this.observationManager.addEventListener(this, eventTypes, path, true, null, types, false);
 
 			}
-			LOG.info("Observing property changes to nodes under {}", paths);
+			LOG.info("Observing property changes to nodes under {}", (Object[]) paths);
 		} catch (final RepositoryException e) {
 			throw new TechnicalException("cannot actiate Preview PreviewReplicationService", e);
 		}
@@ -90,7 +90,7 @@ public class JcrResourceChangeListener implements EventListener {
 		try {
 			this.listener.changed(itr.nextEvent().getPath());
 		} catch (RepositoryException e) {
-			LOG.error("erorr when observing resource", e);
+			LOG.error("error when observing resource", e);
 		}
 	}
 

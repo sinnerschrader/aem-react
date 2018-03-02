@@ -1,4 +1,4 @@
-package com.sinnerschrader.aem.react;
+package com.sinnerschrader.aem.react.metrics;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -10,7 +10,6 @@ import org.apache.sling.api.resource.Resource;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
-import com.sinnerschrader.aem.react.metrics.ComponentMetrics;
 
 public class DefaultComponentMetrics implements AutoCloseable, ComponentMetrics {
 

@@ -76,6 +76,22 @@ public class SlingTest {
 	}
 
 	@Test
+	public void testCurrentResource() throws JsonProcessingException, IOException {
+
+		slingCtx.build().resource("/content/test", "name", "Willem").getCurrentParent();
+
+		Mockito.when(context.getBindings(ScriptContext.ENGINE_SCOPE)).thenReturn(bindings);
+		Mockito.when(bindings.get(SlingBindings.REQUEST)).thenReturn(request);
+		Mockito.when(request.getResourceResolver()).thenReturn(slingCtx.resourceResolver());
+		Mockito.when(request.getResource()).thenReturn(slingCtx.currentResource("/content/test"));
+
+		Sling sling = new Sling(context);
+		String data = sling.currentResource(0);
+		JsonNode tree = new ObjectMapper().readTree(data);
+		Assert.assertEquals("Willem", tree.get("name").textValue());
+
+	}
+	@Test
 	public void testIncludeResource() throws JsonProcessingException, IOException, ServletException {
 
 		slingCtx.build().resource("/content/test", "name", "Willem").getCurrentParent();
@@ -176,6 +192,34 @@ public class SlingTest {
 
 	}
 
+	@Test
+	public void testGetUrl() throws JsonProcessingException, IOException, ServletException {
+
+		String expectedUrl = "/content/x";
+		Mockito.when(context.getBindings(ScriptContext.ENGINE_SCOPE)).thenReturn(bindings);
+		Mockito.when(bindings.get(SlingBindings.REQUEST)).thenReturn(request);
+		Mockito.when(request.getRequestURI()).thenReturn(expectedUrl);
+		String url = createSling().getUrl();
+
+		Assert.assertEquals(expectedUrl, url);
+
+	}
+
+	@Test
+	public void testGetPagePath() throws JsonProcessingException, IOException, ServletException {
+
+		String expectedPath="/content/x";
+		Mockito.when(context.getBindings(ScriptContext.ENGINE_SCOPE)).thenReturn(bindings);
+		Mockito.when(bindings.get(SlingBindings.REQUEST)).thenReturn(request);
+		Mockito.when(request.getPathInfo()).thenReturn(expectedPath);
+		String path = createSling().getPagePath();
+
+		Assert.assertEquals(expectedPath, path);
+
+	}
+
+
+
 	private EditDialog renderDialog(String dialogHtml)
 			throws ServletException, IOException, JsonParseException, JsonMappingException {
 		slingCtx.build().resource("/content/test", "name", "Willem").getCurrentParent();
@@ -195,10 +239,17 @@ public class SlingTest {
 		Mockito.doAnswer(answer).when(dispatcher).include(Mockito.any(ServletRequest.class),
 				Mockito.any(ServletResponse.class));
 
-		Sling sling = new Sling(context);
+		Sling sling1 = new Sling(context);
+		Sling sling = sling1;
 		String data = sling.renderDialogScript("/content/test", "/apps/test");
 		EditDialog dialog = new ObjectMapper().readValue(data, EditDialog.class);
 		return dialog;
+	}
+
+	private Sling createSling() {
+
+		return new Sling(context);
+
 	}
 
 }

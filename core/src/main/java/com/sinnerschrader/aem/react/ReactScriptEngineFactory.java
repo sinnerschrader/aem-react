@@ -39,9 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sinnerschrader.aem.react.JavacriptEnginePoolFactory;
-import com.sinnerschrader.aem.react.JavascriptEngine;
-import com.sinnerschrader.aem.react.ReactScriptEngine;
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ObjectMapperFactory;

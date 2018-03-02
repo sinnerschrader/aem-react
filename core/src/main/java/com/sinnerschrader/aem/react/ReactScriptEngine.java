@@ -51,8 +51,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public Object execute(JavascriptEngine e);
 	}
 
-	private static final String SERVER_RENDERING_DISABLED = "disabled";
-	private static final String SERVER_RENDERING_PARAM = "serverRendering";
+	public static final String SERVER_RENDERING_DISABLED = "disabled";
+	public static final String SERVER_RENDERING_PARAM = "serverRendering";
 	private static final Logger LOG = LoggerFactory.getLogger(ReactScriptEngine.class);
 	private ObjectPool<JavascriptEngine> enginePool;
 	private OsgiServiceFinder finder;
