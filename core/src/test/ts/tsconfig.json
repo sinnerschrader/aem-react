@@ -1,0 +1,18 @@
+{
+  "extends": "./node_modules/ts-config/tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "lib": ["dom", "es2015"],
+    "outDir": "dist",
+    "rootDir": ".",
+    "target": "es5"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "types/**/*.d.ts",
+    "generated/**/*.ts"
+  ]
+}
