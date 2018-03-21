@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/88c0d5f868bc184d70b6799d36b1946787beb48d/mocha/mocha.d.ts",
-    "raw": "github:DefinitelyTyped/DefinitelyTyped/mocha/mocha.d.ts#88c0d5f868bc184d70b6799d36b1946787beb48d",
-    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/88c0d5f868bc184d70b6799d36b1946787beb48d/mocha/mocha.d.ts"
-  }
-}

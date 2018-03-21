@@ -23,6 +23,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -256,6 +257,7 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
+	@Ignore
 	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);

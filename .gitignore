@@ -7,4 +7,5 @@ node_modules
 release.properties
 .project
 .classpath
+docker-compose.yml
 *.xml.releaseBackup

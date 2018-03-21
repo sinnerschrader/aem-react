@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -45,6 +46,7 @@ import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
+	private static final String JSON_RENDER_SELECTOR = "json";
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
 
 	public interface Command {
@@ -120,8 +122,17 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 			Thread.currentThread().setContextClassLoader(((ReactScriptEngineFactory) getFactory()).getClassLoader());
 
-			List<String> selectors = Arrays.asList(request.getRequestPathInfo().getSelectors());
-			boolean renderAsJson = selectors.indexOf("json") >= 0;
+			List<String> rawSelectors = Arrays.asList(request.getRequestPathInfo().getSelectors());
+
+			final List<String> selectors;
+			boolean renderAsJson = rawSelectors.indexOf(JSON_RENDER_SELECTOR) >= 0;
+			if (renderAsJson) {
+				selectors = rawSelectors.stream().filter((String selector) -> {
+					return !selector.equals(JSON_RENDER_SELECTOR);
+				}).collect(Collectors.toList());
+			} else {
+				selectors = rawSelectors;
+			}
 			Resource resource = request.getResource();
 			try (ComponentMetrics metrics = metricsService.create(resource)) {
 

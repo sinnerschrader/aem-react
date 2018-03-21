@@ -1,0 +1,25 @@
+
+
+# Javascript
+
+## Dependencies
+
+- Update dependencies to `aem-react-js@0.24.0`
+- Update imports of aem-react-js modules. All modules have moved to `aem-react-js/lib`.
+- Default imports have all been replaced by named imports: `import {<FileName>} from <Path/FileName>` instead of `import <FileName> from <Path/FileName>`. 
+- ResourceInclude has moved to `aem-react-js/lib/ResourceInclude
+
+## API changes
+
+- Option `depth` was removed from `ComponentConfig` of vanilla components. Use a transform to load the data.
+- `Container` changes:
+    - module is now called `Container` instead of `container` 
+    - `Container.register` -> `Container.setService`
+    - `Container.get` -> `Container.getService`
+- `AemGlobal.renderReactComponent` changes:  
+    - renamed parameter `renderDialog` to `renderAsJson`
+    - added reactContext and selectors
+    - parse selectors into js string array: `Java.from(selectors)`
+- `ResourceComponent` changed:
+   - `State` type doesn't inherit from `ResourceState` anymore
+

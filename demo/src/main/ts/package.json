@@ -2,16 +2,14 @@
   "name": "demo",
   "private": true,
   "version": "0.3.0",
-  "main": "index.js",
   "config": {
-    "crx": "http://admin:admin@localhost:4602/crx/repository/crx.default"
+    "crx": "http://admin:admin@localhost:4502/crx/repository/crx.default"
   },
   "scripts": {
-    "tsd": "typings",
-    "build": "typings install && ./node_modules/typescript/bin/tsc",
-    "start": "webpack --env=development && webpack --env=development --server",
+    "build": "./node_modules/typescript/bin/tsc",
+    "start": "webpack --env.development && webpack --env.development --env.server",
     "watch": "echo \"deploying continuously to $npm_package_config_crx\" & npm run webpack-watch & npm run syncDesigns & npm run syncApps",
-    "webpack-watch": "webpack --env=development --watch & webpack --env=development --server --watch",
+    "webpack-watch": "webpack --env.development --env.watch & webpack --env.development --env.server --watch",
     "syncDesigns": "webdav-sync --local_base ../../../target/classes/etc/designs/ --remote_base $npm_package_config_crx/etc/designs/",
     "syncApps": "webdav-sync --local_base ../content/jcr_root/apps/ --remote_base $npm_package_config_crx/apps/",
     "test": "mocha --compilers ts:espower-typescript/guess test/*.ts",
@@ -22,19 +20,19 @@
     "url": "https://github.com/sinnerschrader/aem-react.git"
   },
   "dependencies": {
-    "aem-react-js": "^0.4.2",
-    "babel-polyfill": "^6.3.14",
+    "aem-react-js": "0.23.0",
+    "babel-polyfill": "6.26.0",
     "classlist-polyfill": "^1.0.2",
     "deep-equal": "^1.0.1",
+    "es6-set": "0.1.5",
     "history": "^3.3.0",
     "invariant": "^2.2.0",
     "node-libs-browser": "^0.5.3",
     "process": "^0.11.1",
     "query-string": "^3.0.0",
-    "react": "^15.3.1",
-    "react-dom": "^15.3.1",
-    "react-router": "^3.0.2",
-    "react-router-page-transition": "^3.0.2",
+    "react": "16.0.0",
+    "react-dom": "16.0.0",
+    "react-transition-group": "2.3.0",
     "strict-uri-encode": "^1.1.0",
     "warning": "^2.1.0"
   },
@@ -44,11 +42,18 @@
     "mocha": "^2.3.4",
     "npm": "^2.13.5",
     "power-assert": "^1.2.0",
-    "ts-loader": "^2.0.1",
-    "tslint": "^4.0.1",
-    "typescript": "^2.1.1",
-    "typings": "^2.1.0",
+    "react-router-dom": "4.2.2",
+    "ts-config": "10.0.1",
+    "ts-loader": "2.2.2",
+    "tslint": "5.8.0",
+    "typescript": "2.4.1",
     "webdav-sync": "^0.4.4",
-    "webpack": "^1.13.1"
-  }
+    "webpack": "^3.2.0",
+    "@types/react-router-dom": "4.2.5",
+    "@types/prop-types": "15.5.2",
+    "@types/react-transition-group": "2.0.7",
+    "@types/react": "16.0.18",
+    "@types/react-dom": "16.0.2"
+  },
+  "peerDependencies": {}
 }
