@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang3.EnumUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor.ClassDescriptorBuilder;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.Discriminator;
@@ -86,7 +87,7 @@ public class GeneratorFromClass {
 
 			Class<?> superClass = info.getBeanDescriptor().getBeanClass().getSuperclass();
 			if (!superClass.equals(Object.class)) {
-				String superClassName = getName(discriminator != null, superClass);
+				String superClassName = getName(ctx.unionTypes.get(superClass) != null, superClass);
 				builder.superClass(TypeDescriptor.builder()//
 						.type(superClassName)//
 						.extern(false)//
@@ -101,37 +102,39 @@ public class GeneratorFromClass {
 			ClassDescriptor cd = builder.build();
 
 			for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
-				if (!BLACKLIST.contains(pd.getName()) && (pd.getReadMethod() != null || pd.getWriteMethod() != null)) {
-					Element fieldAnnotation = null;
-					boolean inherited = false;
-					try {
-						Field declaredField = clazz.getDeclaredField(pd.getName());
-						inherited = declaredField.getDeclaringClass() != clazz;
-						fieldAnnotation = declaredField.getAnnotation(Element.class);
+				if (!BLACKLIST.contains(pd.getName()) && (pd.getReadMethod() != null)) {
+					if (pd.getReadMethod().getAnnotation(JsonIgnore.class) == null) {
+						Element fieldAnnotation = null;
+						boolean inherited = false;
+						try {
+							Field declaredField = clazz.getDeclaredField(pd.getName());
+							inherited = declaredField.getDeclaringClass() != clazz;
+							fieldAnnotation = declaredField.getAnnotation(Element.class);
 
-					} catch (NoSuchFieldException | SecurityException e) {
-						//
-					}
-					if (pd.getReadMethod() != null) {
-						inherited = pd.getReadMethod().getDeclaringClass() != clazz;
-					}
-					if (inherited) {
-						continue;
-					}
-					Element getterAnnotation = pd.getReadMethod() != null
-							? pd.getReadMethod().getAnnotation(Element.class)
-							: null;
-					Element element = Optional//
-							.ofNullable(getterAnnotation)//
-							.orElse(fieldAnnotation);
+						} catch (NoSuchFieldException | SecurityException e) {
+							//
+						}
+						if (pd.getReadMethod() != null) {
+							inherited = pd.getReadMethod().getDeclaringClass() != clazz;
+						}
+						if (inherited) {
+							continue;
+						}
+						Element getterAnnotation = pd.getReadMethod() != null
+								? pd.getReadMethod().getAnnotation(Element.class)
+								: null;
+						Element element = Optional//
+								.ofNullable(getterAnnotation)//
+								.orElse(fieldAnnotation);
 
-					com.sinnerschrader.aem.react.tsgenerator.descriptor.PropertyDescriptor pdd = com.sinnerschrader.aem.react.tsgenerator.descriptor.PropertyDescriptor
-							.builder()//
-							.name(pd.getName())//
-							.type(convertType(pd.getPropertyType(), element, mapper))//
-							.build();
+						com.sinnerschrader.aem.react.tsgenerator.descriptor.PropertyDescriptor pdd = com.sinnerschrader.aem.react.tsgenerator.descriptor.PropertyDescriptor
+								.builder()//
+								.name(pd.getName())//
+								.type(convertType(pd.getPropertyType(), element, mapper))//
+								.build();
 
-					cd.getProperties().put(pdd.getName(), pdd);
+						cd.getProperties().put(pdd.getName(), pdd);
+					}
 				}
 
 			}

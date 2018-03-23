@@ -10,7 +10,7 @@ import lombok.Data;
 
 @ExportTs
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = As.PROPERTY, property = "kind")
-@JsonSubTypes({ @Type(value = Sub1.class, name = "sub1"), @Type(value = Sub2.class, name = "sub2") })
+@JsonSubTypes({ @Type(value = Sub1.class, name = "sub1"), @Type(value = Sub3.class, name = "sub3") })
 @Data
 public abstract class BaseModel {
 	private String value;

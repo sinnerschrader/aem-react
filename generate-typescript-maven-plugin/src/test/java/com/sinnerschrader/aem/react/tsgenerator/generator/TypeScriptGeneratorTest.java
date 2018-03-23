@@ -109,9 +109,11 @@ public class TypeScriptGeneratorTest {
 	public void testSubclassing() {
 		ScanContext ctx = new ScanContext();
 		DiscriminatorPreprocessor.findDiscriminators(BaseModel.class, new PathMapper(BaseModel.class.getName()), ctx);
+
 		ClassDescriptor descriptor = GeneratorFromClass.createClassDescriptor(Sub1.class, ctx,
 				new PathMapper(Sub1.class.getName()));
 		InterfaceModel model = TypeScriptGenerator.builder().build().generateModel(descriptor);
+
 		Assert.assertEquals("BaseBaseModel", descriptor.getSuperClass().getType());
 		Assert.assertEquals(1, model.getImports().size());
 		Assert.assertEquals("BaseBaseModel", model.getSuperclass());
@@ -121,6 +123,37 @@ public class TypeScriptGeneratorTest {
 		Assert.assertEquals("sub1", model.getDiscriminator().getValue());
 		Assert.assertNotNull(model.getSuperclass());
 		Assert.assertEquals(1, model.getFields().size());
+	}
+
+	@Test
+	public void testDeepSubclassing() {
+		ScanContext ctx = new ScanContext();
+		DiscriminatorPreprocessor.findDiscriminators(BaseModel.class, new PathMapper(BaseModel.class.getName()), ctx);
+
+		ClassDescriptor descriptor = GeneratorFromClass.createClassDescriptor(Sub2.class, ctx,
+				new PathMapper(Sub2.class.getName()));
+		InterfaceModel model = TypeScriptGenerator.builder().build().generateModel(descriptor);
+
+		Assert.assertEquals("BaseBaseModel", descriptor.getSuperClass().getType());
+		Assert.assertEquals(1, model.getImports().size());
+		Assert.assertEquals("BaseBaseModel", model.getSuperclass());
+		Assert.assertNull(descriptor.getDiscriminator());
+		Assert.assertNull(model.getDiscriminator());
+
+		ClassDescriptor descriptor2 = GeneratorFromClass.createClassDescriptor(Sub3.class, ctx,
+				new PathMapper(Sub3.class.getName()));
+		InterfaceModel model2 = TypeScriptGenerator.builder().build().generateModel(descriptor2);
+
+		Assert.assertNotNull(descriptor2.getDiscriminator());
+		Assert.assertNotNull(model2.getDiscriminator());
+		Assert.assertEquals("Sub2", descriptor2.getSuperClass().getType());
+
+		Assert.assertEquals(1, model2.getImports().size());
+		Assert.assertEquals("Sub2", model2.getSuperclass());
+		Assert.assertEquals("kind", model2.getDiscriminator().getField());
+		Assert.assertEquals("sub3", model2.getDiscriminator().getValue());
+		Assert.assertNotNull(model2.getSuperclass());
+		Assert.assertEquals(1, model2.getFields().size());
 	}
 
 	@Test

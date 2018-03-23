@@ -2,10 +2,11 @@ package com.sinnerschrader.aem.react.tsgenerator.generator;
 
 import com.sinnerschrader.aem.reactapi.typescript.ExportTs;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
 @ExportTs
-public class TestModel {
-	private String value;
+@Data
+public class Sub3 extends Sub2 {
+	private String subtext;
+
 }

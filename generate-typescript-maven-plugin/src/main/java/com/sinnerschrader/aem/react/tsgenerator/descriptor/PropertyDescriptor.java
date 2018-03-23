@@ -5,11 +5,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PropertyDescriptor
-{
+public class PropertyDescriptor {
 	private TypeDescriptor type;
 
 	private String name;
-
 
 }

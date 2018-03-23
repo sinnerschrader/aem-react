@@ -28,7 +28,7 @@ public class ScannerTest {
 			eds.add(ed);
 		});
 
-		Assert.assertEquals(9, cds.size());
+		Assert.assertEquals(10, cds.size());
 		Assert.assertEquals(0, uts.size());
 		Assert.assertEquals(0, eds.size());
 	}

@@ -15,4 +15,8 @@ public class UnionType {
 
 	private String field;
 
+	public boolean isDirectBaseDescendant(Class<?> clazz) {
+		return clazz.getSuperclass().getName().equals(descriptor.getType());
+	}
+
 }
