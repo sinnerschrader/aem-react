@@ -8,7 +8,7 @@
     <groupId>com.sinnerschrader.vw.aem.react</groupId>
     <artifactId>aem-react</artifactId>
     <packaging>pom</packaging>
-    <version>0.23.1</version>
+    <version>0.23.2-SNAPSHOT</version>
     <name>aem react</name>
     <description>aem react library and demo</description>
     <url>www.github.com/sinnerschrader/aem-react</url>
@@ -36,7 +36,7 @@
         <connection>scm:git://github.com/sinnerschrader/aem-react.git</connection>
         <developerConnection>scm:git:git@github.com:sinnerschrader/aem-react.git</developerConnection>
         <url>https://github.com/sinnerschrader/aem-react.git</url>
-        <tag>aem-react-0.23.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
