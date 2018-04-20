@@ -1,197 +1,207 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- | Copyright 2015 Adobe Systems Incorporated | | Licensed under the Apache 
-		License, Version 2.0 (the "License"); | you may not use this file except 
-		in compliance with the License. | You may obtain a copy of the License at 
-		| | http://www.apache.org/licenses/LICENSE-2.0 | | Unless required by applicable 
-		law or agreed to in writing, software | distributed under the License is 
-		distributed on an "AS IS" BASIS, | WITHOUT WARRANTIES OR CONDITIONS OF ANY 
-		KIND, either express or implied. | See the License for the specific language 
-		governing permissions and | limitations under the License. -->
+<!-- | Copyright 2015 Adobe Systems Incorporated | | Licensed under the Apache License, Version 2.0 (the "License"); | you may not use this file except in compliance 
+    with the License. | You may obtain a copy of the License at | | http://www.apache.org/licenses/LICENSE-2.0 | | Unless required by applicable law or agreed to in 
+    writing, software | distributed under the License is distributed on an "AS IS" BASIS, | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+    | See the License for the specific language governing permissions and | limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-		<modelVersion>4.0.0</modelVersion>
-		<parent>
-				<groupId>com.sinnerschrader.vw.aem.react</groupId>
-				<artifactId>aem-react</artifactId>
-				<version>0.6.4-SNAPSHOT</version>
-				<relativePath>../pom.xml</relativePath>
-		</parent>
-		<artifactId>democore</artifactId>
-		<packaging>bundle</packaging>
-		<name>website - demo core</name>
-		<description>Core bundle for website</description>
-		<build>
-				<plugins>
-						<plugin>
-								<groupId>org.apache.maven.plugins</groupId>
-								<artifactId>maven-compiler-plugin</artifactId>
-								<configuration>
-										<source>${java.version}</source>
-										<target>${java.version}</target>
-								</configuration>
-						</plugin>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sinnerschrader.aem.react</groupId>
+        <artifactId>aem-react</artifactId>
+        <version>0.23.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>democore</artifactId>
+    <packaging>bundle</packaging>
+    <name>website - demo core</name>
+    <description>Core bundle for website</description>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
 
-						<plugin>
-								<groupId>org.apache.felix</groupId>
-								<artifactId>maven-scr-plugin</artifactId>
-						</plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
 
-						<plugin>
-								<groupId>org.apache.felix</groupId>
-								<artifactId>maven-bundle-plugin</artifactId>
-								<extensions>true</extensions>
-								<configuration>
-										<instructions>
-                                            <!-- Import any version of javax.inject, to allow running on multiple versions of AEM -->
-                                            <Import-Package>javax.inject;version=0.0.0,*</Import-Package>
-												<Embed-Dependency>
-														jackson-core,
-														jackson-annotations,
-														jackson-databind,
-														handlebars,
-														antlr4-runtime,
-														rhino,
-														jsoup
-												</Embed-Dependency>
-												<Export-Package>com.sinnerschrader.aem.react.demo.*</Export-Package>
-												<Sling-Model-Packages>com.sinnerschrader.aem.react.demo</Sling-Model-Packages>
-										</instructions>
-								</configuration>
-						</plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <!-- Import any version of javax.inject, to allow running on multiple versions of AEM -->
+                        <Import-Package>javax.inject;version=0.0.0,*</Import-Package>
+                        <Embed-Dependency>
+                            jackson-core,
+                            jackson-annotations,
+                            jackson-databind,
+                            handlebars,
+                            antlr4-runtime,
+                            rhino,
+                            jsoup
+                        </Embed-Dependency>
+                        <Import-Package>
+                            org.apache.sling.api.resource;version=!,
+                            org.apache.sling.models.annotations;version=!,
+                            com.day.cq.wcm.foundation;version=!,
+                            com.day.cq.wcm.api;version=!,
+                            com.day.cq.wcm.api.components;version=!,
+                            *
+                        </Import-Package>
+                        <Export-Package>com.sinnerschrader.aem.react.demo.*</Export-Package>
+                        <Sling-Model-Packages>com.sinnerschrader.aem.react.demo</Sling-Model-Packages>
+                    </instructions>
+                </configuration>
+            </plugin>
 
-						<plugin>
-								<groupId>org.apache.maven.plugins</groupId>
-								<artifactId>maven-surefire-plugin</artifactId>
-						</plugin>
-				</plugins>
-		</build>
-		<profiles>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
 
-				<!-- Development profile: install only the bundle -->
-				<profile>
-						<id>autoInstallBundle</id>
-						<activation>
-								<activeByDefault>false</activeByDefault>
-						</activation>
-						<build>
-								<plugins>
-										<plugin>
-												<groupId>org.apache.sling</groupId>
-												<artifactId>maven-sling-plugin</artifactId>
-												<configuration>
-														<!-- Note that this requires /apps/react-demo/install to exist!! -->
-														<!-- This is typically the case when ui.apps is deployed first -->
-														<!-- Otherwise, create /apps/react-demo/install manually (CRXDE|Lite) -->
-														<slingUrlSuffix>/apps/react-demo/install/</slingUrlSuffix>
-														<failOnError>true</failOnError>
-												</configuration>
-										</plugin>
-								</plugins>
-						</build>
-				</profile>
+        <!-- Development profile: install only the bundle -->
+        <profile>
+            <id>autoInstallBundle</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-sling-plugin</artifactId>
+                        <configuration>
+                            <!-- Note that this requires /apps/react-demo/install to exist!! -->
+                            <!-- This is typically the case when ui.apps is deployed first -->
+                            <!-- Otherwise, create /apps/react-demo/install manually (CRXDE|Lite) -->
+                            <slingUrlSuffix>/apps/react-demo/install/</slingUrlSuffix>
+                            <failOnError>true</failOnError>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-		</profiles>
-		<dependencies>
-				
-				<!-- the core, which includes Streaming API, shared low-level abstractions 
-						(but NOT data-binding) -->
-				<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-core</artifactId>
-				</dependency>
+    </profiles>
+    <dependencies>
 
-				<!-- Just the annotations; use this dependency if you want to attach 
-						annotations to classes without connecting them to the code. -->
-				<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-				</dependency>
-
-				<!-- databinding; ObjectMapper, JsonNode and related classes are here -->
-				<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-databind</artifactId>
-				</dependency>
-
-
-
-
-				<!-- OSGi Dependencies -->
-				<dependency>
-						<groupId>org.apache.felix</groupId>
-						<artifactId>org.apache.felix.scr</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>org.apache.felix</groupId>
-						<artifactId>org.apache.felix.scr.annotations</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>biz.aQute</groupId>
-						<artifactId>bndlib</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>org.osgi</groupId>
-						<artifactId>org.osgi.core</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>org.osgi</groupId>
-						<artifactId>org.osgi.compendium</artifactId>
-				</dependency>
-				<!-- Other Dependencies -->
-				<dependency>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-api</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>javax.jcr</groupId>
-						<artifactId>jcr</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>javax.servlet</groupId>
-						<artifactId>servlet-api</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>com.adobe.aem</groupId>
-						<artifactId>uber-jar</artifactId>
-				</dependency>
+        <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
         <dependency>
-            <groupId>com.sinnerschrader.vw.aem.react</groupId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+
+        <!-- Just the annotations; use this dependency if you want to attach annotations to classes without connecting them to the code. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+
+
+
+        <!-- OSGi Dependencies -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <!-- Other Dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.aem</groupId>
+            <artifactId>uber-jar</artifactId>
+            <classifier>apis</classifier>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.sinnerschrader.aem.react</groupId>
             <artifactId>core</artifactId>
             <version>${project.version}</version>
         </dependency>
-				<dependency>
-						<groupId>org.apache.sling</groupId>
-						<artifactId>org.apache.sling.models.api</artifactId>
-				</dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.models.api</artifactId>
+        </dependency>
 
 
 
-				<!-- Testing -->
-				<dependency>
-						<groupId>junit</groupId>
-						<artifactId>junit</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>org.mockito</groupId>
-						<artifactId>mockito-all</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>junit-addons</groupId>
-						<artifactId>junit-addons</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-simple</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>commons-io</groupId>
-						<artifactId>commons-io</artifactId>
-						<version>2.4</version>
-				</dependency>
-                <dependency>
-                        <groupId>javax.inject</groupId>
-                        <artifactId>javax.inject</artifactId>
-                        <version>1</version>
-                </dependency>
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
 
-		</dependencies>
+    </dependencies>
 </project>

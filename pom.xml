@@ -5,7 +5,7 @@
     | See the License for the specific language governing permissions and | limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.sinnerschrader.vw.aem.react</groupId>
+    <groupId>com.sinnerschrader.aem.react</groupId>
     <artifactId>aem-react</artifactId>
     <packaging>pom</packaging>
     <version>0.23.2-SNAPSHOT</version>
@@ -28,8 +28,8 @@
         <module>core</module>
         <module>generate-typescript-maven-plugin</module>
         <module>aem-react-api</module>
-        <!-- <module>democore</module> -->
-        <!-- <module>demo</module> -->
+        <module>democore</module>
+        <module>demo</module>
     </modules>
 
     <scm>

@@ -49,29 +49,33 @@
 	-ms-transform: rotate(0);
 	transform: rotate(0);
 }
+.cq-Editable-dom .city-view {
+	position: relative;
+}
 
 .city-view {
 	position: absolute;
 	overflow: visible;
-	transition: transform 0.5s, opacity 0.5s;
 }
 
-.city-view.transition-appear {
-	opacity: 0;
-	transform: translate3d(200%, 0, 0);
+
+.fade-enter {
+  opacity: 0;
+  z-index: 1;
 }
 
-.city-view.transition-appear.transition-appear-active {
-	opacity: 1;
-	transform: translate3d(0, 0, 0);
+.fade-exit {
+  opacity: 1;
+  z-index: 0;
 }
 
-.city-view.transition-leave {
-	opacity: 1;
-	transform: translate3d(0, 0, 0);
+.fade-exit.fade-exit-active {
+  opacity: 0;
+  transition: opacity 250ms ease-out;
 }
 
-.city-view.transition-leave.transition-leave-active {
-	opacity: 0;
-	transform: translate3d(0, 0, 0);
+.fade-enter.fade-enter-active {
+  opacity: 1;
+  transition: opacity 250ms ease-in;
 }
+

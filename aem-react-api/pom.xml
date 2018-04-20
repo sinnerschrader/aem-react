@@ -6,7 +6,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.sinnerschrader.vw.aem.react</groupId>
+        <groupId>com.sinnerschrader.aem.react</groupId>
         <artifactId>aem-react</artifactId>
         <version>0.23.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>

@@ -189,7 +189,7 @@ public class IntegrationTest {
 		String json = render();
 		JsonNode cache = new ObjectMapper().readTree(json);
 
-		Assert.assertEquals(content, cache.get("transforms").get(path + ":json").get("content").asText());
+		Assert.assertEquals(content, cache.get("transforms").get(path ).get("content").asText());
 
 	}
 

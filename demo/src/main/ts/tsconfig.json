@@ -1,28 +1,18 @@
 {
-  "compileOnSave": false,
+  "extends": "./node_modules/ts-config/tsconfig.json",
   "compilerOptions": {
-    "target": "es3",
-    "sourceMap": true,
-    "module": "commonjs",
+    "experimentalDecorators": true,
     "jsx": "react",
-    "noEmit":false,
-    "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": false
+    "lib": [
+      "dom",
+      "es2015"
+    ],
+    "outDir": "dist",
+    "rootDir": ".",
+    "target": "es5"
   },
-  "files": [
-    "./references.d.ts",
-    "./client.tsx",
-    "./server.tsx",
-    "cityfinder/CityFinder.tsx",
-    "cityfinder/CityListView.tsx",
-    "cityfinder/CityView.tsx",
-    "./vanilla/TextField.tsx",
-    "./text/text.tsx",
-    "./text/richtext.tsx",
-    "./embedded/embedded.tsx",
-    "./accordion/accordion-element.tsx",
-    "./accordion/accordion.tsx",
-    "./componentRegistry.tsx"
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }
