@@ -9,3 +9,4 @@ release.properties
 .classpath
 docker-compose.yml
 *.xml.releaseBackup
+*.iml
