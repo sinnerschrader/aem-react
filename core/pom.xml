@@ -41,9 +41,6 @@
                 <configuration>
                     <instructions>
                         <Embed-Dependency>
-                            jackson-core,
-                            jackson-annotations,
-                            jackson-databind,
                             handlebars,
                             antlr4-runtime,
                             rhino,
