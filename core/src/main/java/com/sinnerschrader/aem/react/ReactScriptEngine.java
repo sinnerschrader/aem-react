@@ -48,6 +48,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	private static final String JSON_RENDER_SELECTOR = "json";
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
+	private static final String CURRENT_COMPONENT_ID_KEY = ReactScriptEngine.class.getName() + "_CURRENT_COMPONENT_ID";
 
 	public interface Command {
 		public Object execute(JavascriptEngine e);
@@ -193,8 +194,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					output = cacheString;
 					response.setContentType("application/json");
 				} else {
+					String id = nextComponentId(request);
 					output = wrapHtml(mappedPath, resource, renderedHtml, serverRendering, getWcmMode(request),
-							cacheString, selectors);
+							cacheString, selectors, id);
 
 				}
 
@@ -210,6 +212,18 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	}
 
+	private String nextComponentId(SlingHttpServletRequest request) {
+		Integer currentComponentId =  (Integer) request.getAttribute(CURRENT_COMPONENT_ID_KEY);
+		if (currentComponentId==null) {
+			currentComponentId=1;
+		} else {
+			currentComponentId++;
+		}
+		request.setAttribute(CURRENT_COMPONENT_ID_KEY, currentComponentId);
+		return String.valueOf("react_cid_"+currentComponentId);
+
+	}
+
 	/**
 	 * wrap the rendered react markup with the teaxtarea that contains the
 	 * component's props.
@@ -222,7 +236,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 * @return
 	 */
 	String wrapHtml(String mappedPath, Resource resource, String renderedHtml, boolean serverRendering, String wcmmode,
-			String cache, List<String> selectors) {
+			String cache, List<String> selectors, String id) {
 		JSONObject reactProps = new JSONObject();
 		try {
 			if (cache != null) {
@@ -238,9 +252,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
 		String classString = (StringUtils.isNotEmpty(rootElementClass)) ? " class=\"" + rootElementClass + "\"" : "";
 		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
-				+ String.valueOf(serverRendering) + "\" data-react=\"app\" data-react-id=\"" + mappedPath
-				+ "_component\">" + renderedHtml + "</" + rootElementName + ">" + "<textarea id=\"" + mappedPath
-				+ "_component\" style=\"display:none;\">" + jsonProps + "</textarea>";
+				+ String.valueOf(serverRendering) + "\" data-react=\"app\" data-react-id=\"" + id + "\">"
+				+ renderedHtml + "</" + rootElementName + ">" + "<textarea id=\"" + id+ "\" style=\"display:none;\">" + jsonProps + "</textarea>";
 
 		return allHtml;
 	}
