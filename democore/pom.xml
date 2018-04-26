@@ -114,9 +114,6 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-
-
-
         <!-- OSGi Dependencies -->
         <dependency>
             <groupId>org.apache.felix</groupId>

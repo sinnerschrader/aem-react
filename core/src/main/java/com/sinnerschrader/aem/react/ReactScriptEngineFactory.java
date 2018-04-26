@@ -116,6 +116,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	private boolean disableMapping;
 	private boolean enableReverseMapping;
 
+	private boolean initialized = false;
+
 	public synchronized void createScripts() {
 		List<HashedScript> newScripts = new LinkedList<>();
 		// we need to add the nashorn polyfill for console, global and AemGlobal
@@ -211,8 +213,24 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
 				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping, disableMapping,
 				mangleNameSpaces);
-		this.createScripts();
+		try {
+			initialized=false;
+			initializeScripts();
+		} catch (Exception e) {
+			LOGGER.info("cannot load and listen to script on initialize. will try again later", e);
+		}
+	}
 
+	private synchronized void initializeScripts() {
+		if (this.initialized) {
+			return;
+		}
+		this.createScripts();
+		startListener();
+		this.initialized = true;
+	}
+
+	private void startListener() {
 		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory,
 				new JcrResourceChangeListener.Listener() {
 					@Override
@@ -222,7 +240,6 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 				}, subServiceName);
 		this.listener.activate(scriptResources);
-
 	}
 
 	@Modified
@@ -233,6 +250,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	@Deactivate
 	public void stop() throws RepositoryException {
+		initialized=false;
 		this.engine.stop();
 		this.listener.deactivate();
 	}
@@ -242,12 +260,16 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(poolTotalSize);
 		config.setMaxIdle(poolTotalSize);
-		config.setMinIdle(poolTotalSize / 3);
+		config.setMinIdle(0);
+		config.setJmxEnabled(true);
 		return new GenericObjectPool<JavascriptEngine>(javacriptEnginePoolFactory, config);
 	}
 
 	@Override
 	public ScriptEngine getScriptEngine() {
+		if (!initialized) {
+			initializeScripts();
+		}
 		return engine;
 	}
 
