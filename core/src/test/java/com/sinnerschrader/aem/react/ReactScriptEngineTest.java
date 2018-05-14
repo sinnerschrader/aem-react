@@ -136,8 +136,6 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 
@@ -184,8 +182,6 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 
@@ -223,8 +219,6 @@ public class ReactScriptEngineTest {
 		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 
@@ -359,8 +353,6 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 

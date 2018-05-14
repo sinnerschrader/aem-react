@@ -120,8 +120,6 @@ public class IntegrationTest {
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(content, jsonFromTextArea.get("cache").get("transforms").get(path).get("content").asText());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 
@@ -153,8 +151,6 @@ public class IntegrationTest {
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals("RequestModel",
 				jsonFromTextArea.get("cache").get("transforms").get(path + ":requestmodel").get("content").asText());
-		Assert.assertEquals("react_cid_1", wrapper.attr("data-react-id"));
-		Assert.assertEquals("react_cid_1", textarea.attr("id"));
 
 	}
 
