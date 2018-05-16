@@ -16,6 +16,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.sinnerschrader.aem.react.mapping.ResourceResolverHelperFactory;
+
 @RunWith(MockitoJUnitRunner.class)
 public class ResourceResolverHelperFactoryTest {
 
@@ -73,6 +75,18 @@ public class ResourceResolverHelperFactoryTest {
 	}
 
 	@Test
+	public void testSlingAliasHomePage() {
+		Mockito.when(resolver.map(Mockito.any(HttpServletRequest.class), Mockito.anyString()))
+				.thenReturn("/alias_de/alias_x/jcr:content/teaser");
+		expectResourcePath("/content/sample/de/x/jcr:content/teaser");
+
+		ResourceResolverHelper helper = ResourceResolverHelperFactory.createHelper(request, true);
+
+		// although this is wrong. The important part is the prefix.
+		Assert.assertEquals("/content/sample/alias_de/william.html", helper.resolveInternally("/alias_de/william.html"));
+	}
+
+	@Test
 	public void mangleNoNamespace() {
 		String mangleNamespaces = ResourceResolverHelperFactory.mangleNamespaces("/content/index");
 		Assert.assertEquals("/content/index", mangleNamespaces);
@@ -117,4 +131,27 @@ public class ResourceResolverHelperFactoryTest {
 		Mockito.when(request.getRequestURI()).thenReturn(uri);
 	}
 
+	@Test
+	public void testGetPathPrefix() throws Exception {
+		String pathPrefix = ResourceResolverHelperFactory.getPathPrefix("/a/b/c/d", "/c/d");
+		Assert.assertEquals("/a/b", pathPrefix);
+	}
+
+	@Test
+	public void testGetPathPrefixWithAlias() throws Exception {
+		String pathPrefix = ResourceResolverHelperFactory.getPathPrefix("/a/b/c/d", "/x123123123/y12");
+		Assert.assertEquals("/a/b", pathPrefix);
+	}
+
+	@Test
+	public void testGetPathPrefixWithAliasReverse() throws Exception {
+		String pathPrefix = ResourceResolverHelperFactory.getPathPrefix("/x123123123/y12", "/a/b/c/d");
+		Assert.assertEquals("/a/b", pathPrefix);
+	}
+
+	@Test
+	public void testGetPathPrefixNone() throws Exception {
+		String pathPrefix = ResourceResolverHelperFactory.getPathPrefix("/x123123123/y12", "/a/b");
+		Assert.assertEquals("", pathPrefix);
+	}
 }

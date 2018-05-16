@@ -2,8 +2,10 @@ package com.sinnerschrader.aem.react.json;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -11,26 +13,48 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 public class ResourceResolverHelperFactory {
 
-	private final static String REQUEST_KEY = "com.sinnerschrader.aem.react.json.ResourceResolver.REQUEST_KEY";
 	private static Pattern manglePattern = Pattern.compile("([^/]+):([^/]+)");
 
-	public static ResourceResolverHelper create(SlingHttpServletRequest request, boolean mangleNameSpaces) {
+	public static ResourceResolverHelper createHelper(SlingHttpServletRequest request, boolean mangleNameSpaces) {
 		final Resource resource = request.getResource();
 		final String resourcePath = resource.getPath();
 
 		ResourceResolver resourceResolver = request.getResourceResolver();
 		String mappedPath = createMappedPath(request, resourcePath);
 		String mangledResourcePath = mangleNameSpaces ? mangleNamespaces(resourcePath) : resourcePath;
-		int prefixLength = mangledResourcePath.indexOf(mappedPath);
-		final ResourceResolverHelper resolver;
-		if (prefixLength >= 0) {
-			resolver = new ResourceResolverHelper(mangledResourcePath.substring(0, prefixLength), resourceResolver);
+		String pathPrefix = getPathPrefix(mangledResourcePath, mappedPath);
+		if (pathPrefix.length() > 0) {
+			return new ResourceResolverHelper(pathPrefix, resourceResolver);
+		}
+		return null;
+
+	}
+
+	public static String getPathPrefix(String aPath, String bPath) {
+		String[] aSegments = aPath.split("/");
+		String[] bSegments = bPath.split("/");
+		if (aSegments.length > bSegments.length) {
+			return createPrefix(aSegments, bSegments);
+		} else if (bSegments.length > aSegments.length) {
+			return createPrefix(bSegments, aSegments);
 		} else {
-			resolver = new ResourceResolverHelper("", resourceResolver);
+			return "";
 		}
 
-		return resolver;
+	}
 
+	private static String createPrefix(String[] aSegments, String[] bSegments) {
+		return Arrays.asList(aSegments).subList(0, aSegments.length - bSegments.length + 1).stream()
+				.collect(Collectors.joining("/"));
+	}
+
+	public static ResourceResolver create(SlingHttpServletRequest request, boolean mangleNameSpaces) {
+		final ResourceResolver resourceResolver = request.getResourceResolver();
+		ResourceResolverHelper resolver = createHelper(request, mangleNameSpaces);
+		if (resolver != null) {
+			return resolver;
+		}
+		return resourceResolver;
 	}
 
 	public static String mangleNamespaces(String path) {
