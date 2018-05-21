@@ -39,6 +39,15 @@ public class ResourceResolverHelperTest {
 	}
 
 	@Test
+	public void testUrlUTF8EncodedPath() {
+
+		expect("/content/töst tüst", true);
+		ResourceResolverHelper helper = new ResourceResolverHelper("/content", delegate);
+
+		Assert.assertEquals("/content/töst tüst", helper.resolve("/t%C3%B6st%20t%C3%BCst").getPath());
+	}
+
+	@Test
 	public void testNoPrefix() {
 
 		expect("/index", true);
