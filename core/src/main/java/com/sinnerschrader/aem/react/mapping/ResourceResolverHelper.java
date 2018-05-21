@@ -1,6 +1,8 @@
 package com.sinnerschrader.aem.react.mapping;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,8 +15,9 @@ public class ResourceResolverHelper extends ResourceResolverWrapper{
 	private ResourceResolver delegate;
 
 
-	public Resource resolve(HttpServletRequest arg0, String arg1) {
-		return delegate.resolve(arg0, resolveInternally(arg1));
+	public Resource resolve(HttpServletRequest request, String path)  {
+
+			return delegate.resolve(request, resolveInternally(path));
 	}
 
 	public Resource resolve(String arg0) {
@@ -32,6 +35,11 @@ public class ResourceResolverHelper extends ResourceResolverWrapper{
 	}
 
 	public String resolveInternally(String uriPathOrUrl) {
+		try {
+			uriPathOrUrl = URLDecoder.decode(uriPathOrUrl,"UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// ignore
+		}
 		String uriPath;
 		try {
 			uriPath = new URL(uriPathOrUrl).getPath();
