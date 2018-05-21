@@ -1,6 +1,8 @@
 package com.sinnerschrader.aem.react.json;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -183,6 +185,11 @@ public class ResourceResolverHelper implements ResourceResolver {
 	}
 
 	public String resolveInternally(String uriPathOrUrl) {
+		try {
+			uriPathOrUrl = URLDecoder.decode(uriPathOrUrl, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// ignore
+		}
 		String uriPath;
 		try {
 			uriPath = new URL(uriPathOrUrl).getPath();
