@@ -16,6 +16,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -37,7 +38,6 @@ import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ReactSlingHttpServletRequestWrapper;
 import com.sinnerschrader.aem.react.json.ResourceMapper;
 import com.sinnerschrader.aem.react.json.ResourceMapperLocator;
-import com.sinnerschrader.aem.react.json.ResourceResolverHelper;
 import com.sinnerschrader.aem.react.json.ResourceResolverHelperFactory;
 
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
@@ -104,7 +104,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingHttpServletRequest originalRequest = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
 		SlingHttpServletRequest request;
 		if (enableReverseMapping) {
-			ResourceResolverHelper resolverHelper = ResourceResolverHelperFactory.create(originalRequest,
+			ResourceResolver resolverHelper = ResourceResolverHelperFactory.create(originalRequest,
 					mangleNameSpaces);
 			request = new ReactSlingHttpServletRequestWrapper(originalRequest, resolverHelper);
 			bindings.put(SlingBindings.REQUEST, request);
