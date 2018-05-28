@@ -16,8 +16,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.sinnerschrader.aem.react.mapping.ResourceResolverHelperFactory;
-
 @RunWith(MockitoJUnitRunner.class)
 public class ResourceResolverHelperFactoryTest {
 
@@ -46,7 +44,7 @@ public class ResourceResolverHelperFactoryTest {
 		expectMappingPrefix("", "/content");
 		expectResourcePath("/content/de/index/jcr:content/teaser");
 
-		ResourceResolverHelper helper = ResourceResolverHelperFactory.create(request, true);
+		ResourceResolverHelper helper = (ResourceResolverHelper) ResourceResolverHelperFactory.create(request, true);
 
 		Assert.assertEquals("/content/en/william.html", helper.resolveInternally("/en/william.html"));
 	}
@@ -58,7 +56,7 @@ public class ResourceResolverHelperFactoryTest {
 		expectMappingPrefix("", "/content");
 		expectResourcePath("/content/de/index/jcr:content/teaser");
 
-		ResourceResolverHelper helper = ResourceResolverHelperFactory.create(request, true);
+		ResourceResolverHelper helper = (ResourceResolverHelper) ResourceResolverHelperFactory.create(request, true);
 
 		Assert.assertEquals("/content/en/william.html", helper.resolveInternally("/en/william.html"));
 	}
@@ -69,7 +67,7 @@ public class ResourceResolverHelperFactoryTest {
 		expectMappingPrefix("http://domain.de:8443", "/content");
 		expectResourcePath("/content/de/index/jcr:content/teaser");
 
-		ResourceResolverHelper helper = ResourceResolverHelperFactory.create(request, true);
+		ResourceResolverHelper helper = (ResourceResolverHelper) ResourceResolverHelperFactory.create(request, true);
 
 		Assert.assertEquals("/content/en/william.html", helper.resolveInternally("/en/william.html"));
 	}
