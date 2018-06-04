@@ -23,6 +23,8 @@ public class TypeDescriptor
 
 	public static final String MAP = "{}";
 
+	public static final String NULL = "null";
+
 	private String type;
 
 	private boolean map;

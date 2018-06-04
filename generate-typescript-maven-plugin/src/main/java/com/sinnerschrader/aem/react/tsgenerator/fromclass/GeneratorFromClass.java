@@ -1,31 +1,21 @@
 package com.sinnerschrader.aem.react.tsgenerator.fromclass;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sinnerschrader.aem.react.tsgenerator.descriptor.*;
+import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor.ClassDescriptorBuilder;
+import com.sinnerschrader.aem.react.tsgenerator.generator.PathMapper;
+import com.sinnerschrader.aem.reactapi.typescript.Element;
+import com.sinnerschrader.aem.reactapi.typescript.NotNull;
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang3.EnumUtils;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.lang3.EnumUtils;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor.ClassDescriptorBuilder;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.Discriminator;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.EnumDescriptor;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.ScanContext;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.TypeDescriptor;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.UnionType;
-import com.sinnerschrader.aem.react.tsgenerator.generator.PathMapper;
-import com.sinnerschrader.aem.reactapi.typescript.Element;
 
 public class GeneratorFromClass {
 	public static final Set<String> BLACKLIST = Collections.unmodifiableSet(new HashSet<String>() {
@@ -131,6 +121,7 @@ public class GeneratorFromClass {
 								.builder()//
 								.name(pd.getName())//
 								.type(convertType(pd.getPropertyType(), element, mapper))//
+								.isNotNullable(isNotNull(pd))
 								.build();
 
 						cd.getProperties().put(pdd.getName(), pdd);
@@ -161,6 +152,13 @@ public class GeneratorFromClass {
 				.fullJavaClassName(enumClass.getName())//
 				.values(map.values().stream().map((E e) -> e.name()).sorted().collect(Collectors.toList()))//
 				.build();
+	}
+
+	private static boolean isNotNull(PropertyDescriptor pd) {
+		return Optional.ofNullable(pd.getReadMethod())
+				.map(it -> it.getAnnotation(NotNull.class) != null
+						|| it.getReturnType().equals(boolean.class))
+				.orElse(false);
 	}
 
 }

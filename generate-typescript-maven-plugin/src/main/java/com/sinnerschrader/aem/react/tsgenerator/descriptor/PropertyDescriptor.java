@@ -10,4 +10,6 @@ public class PropertyDescriptor {
 
 	private String name;
 
+	private boolean isNotNullable;
+
 }

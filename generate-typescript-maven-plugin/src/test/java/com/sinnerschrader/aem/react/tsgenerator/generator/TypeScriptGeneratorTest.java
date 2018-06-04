@@ -2,6 +2,7 @@ package com.sinnerschrader.aem.react.tsgenerator.generator;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +28,11 @@ public class TypeScriptGeneratorTest {
 		Assert.assertEquals(1, generate.getFields().size());
 		FieldModel field = generate.getFields().iterator().next();
 		Assert.assertEquals("value", field.getName());
+
+		Assert.assertEquals(2, field.getTypes().length);
 		Assert.assertEquals("string", field.getTypes()[0]);
+		Assert.assertEquals("null", field.getTypes()[1]);
+
 		Assert.assertEquals(0, generate.getImports().size());
 		Assert.assertEquals("string", field.getTypes()[0]);
 	}
@@ -40,7 +45,11 @@ public class TypeScriptGeneratorTest {
 		Assert.assertEquals(1, generate.getFields().size());
 		FieldModel field = generate.getFields().iterator().next();
 		Assert.assertEquals("model", field.getName());
+
+		Assert.assertEquals(2, field.getTypes().length);
 		Assert.assertEquals("TestModel", field.getTypes()[0]);
+		Assert.assertEquals("null", field.getTypes()[1]);
+
 		Assert.assertEquals(1, generate.getImports().size());
 		Assert.assertEquals("TestModel", generate.getImports().iterator().next().getName());
 	}
@@ -52,8 +61,12 @@ public class TypeScriptGeneratorTest {
 		InterfaceModel generate = TypeScriptGenerator.builder().build().generateModel(descriptor);
 		Assert.assertEquals(1, generate.getFields().size());
 		FieldModel field = generate.getFields().iterator().next();
+		Assert.assertEquals(2, field.getTypes().length);
+
 		Assert.assertEquals("models", field.getName());
 		Assert.assertEquals("TestModel[]", field.getTypes()[0]);
+		Assert.assertEquals("null", field.getTypes()[1]);
+
 		Assert.assertEquals(1, generate.getImports().size());
 		Assert.assertEquals("TestModel", generate.getImports().iterator().next().getName());
 	}
@@ -66,7 +79,11 @@ public class TypeScriptGeneratorTest {
 		Assert.assertEquals(1, generate.getFields().size());
 		FieldModel field = generate.getFields().iterator().next();
 		Assert.assertEquals("models", field.getName());
+
+		Assert.assertEquals(2, field.getTypes().length);
 		Assert.assertEquals("TestModel[]", field.getTypes()[0]);
+		Assert.assertEquals("null", field.getTypes()[1]);
+
 		Assert.assertEquals(1, generate.getImports().size());
 		Assert.assertEquals("TestModel", generate.getImports().iterator().next().getName());
 	}
@@ -79,7 +96,11 @@ public class TypeScriptGeneratorTest {
 		Assert.assertEquals(1, generate.getFields().size());
 		FieldModel field = generate.getFields().iterator().next();
 		Assert.assertEquals("models", field.getName());
+
+		Assert.assertEquals(2, field.getTypes().length);
 		Assert.assertEquals("TestModel[]", field.getTypes()[0]);
+		Assert.assertEquals("null", field.getTypes()[1]);
+
 		Assert.assertEquals(1, generate.getImports().size());
 		Assert.assertEquals("TestModel", generate.getImports().iterator().next().getName());
 	}
@@ -178,6 +199,29 @@ public class TypeScriptGeneratorTest {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.writeValue(writer, sub1);
 		Assert.assertEquals("{\"kind\":\"sub1\",\"value\":null,\"more\":\"hi\"}", writer.toString());
+	}
+
+	@Test
+	public void testTypeIsNotNull() throws IOException {
+		ClassDescriptor descriptor = GeneratorFromClass.createClassDescriptor(TestNotNull.class, new ScanContext(),
+				new PathMapper(TestNotNull.class.getName()));
+		InterfaceModel generate = TypeScriptGenerator.builder().build().generateModel(descriptor);
+		Assert.assertEquals("TestNotNull", generate.getName());
+		Assert.assertEquals(TestNotNull.class.getName(), generate.getFullSlingModelName());
+		Assert.assertEquals(2, generate.getFields().size());
+
+		Iterator<FieldModel> iterator = generate.getFields().iterator();
+		FieldModel field = iterator.next();
+
+		// no null type for booleans
+		Assert.assertEquals("done", field.getName());
+		Assert.assertEquals(1, field.getTypes().length);
+		Assert.assertEquals("boolean", field.getTypes()[0]);
+
+		field = iterator.next();
+		Assert.assertEquals("value", field.getName());
+		Assert.assertEquals(1, field.getTypes().length);
+		Assert.assertEquals("string", field.getTypes()[0]);
 	}
 
 }

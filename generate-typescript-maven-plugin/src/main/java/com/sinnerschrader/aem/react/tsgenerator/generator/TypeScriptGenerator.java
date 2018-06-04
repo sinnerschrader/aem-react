@@ -2,10 +2,13 @@ package com.sinnerschrader.aem.react.tsgenerator.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import com.google.inject.internal.util.ImmutableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 
@@ -69,12 +72,9 @@ public class TypeScriptGenerator {
 						.build());
 			}
 
-			final String fullType = prop.getType().isArray() ? prop.getType().getType() + "[]"
-					: prop.getType().isMap() ? "{[key: string]: " + prop.getType().getType() + "}"
-							: prop.getType().getType();
 			fields.add(FieldModel.builder()//
 					.name(prop.getName())//
-					.types(new String[] { fullType })//
+					.types(getTypes(prop))//
 					.build());
 		}
 
@@ -143,6 +143,19 @@ public class TypeScriptGenerator {
 		String content = FileUtils.readFileToString(file);
 		return new StringTemplateSource(file.getAbsolutePath(), content);
 
+	}
+
+	private String[] getTypes(PropertyDescriptor prop) {
+		final String fullType = prop.getType().isArray() ? prop.getType().getType() + "[]"
+				: prop.getType().isMap() ? "{[key: string]: " + prop.getType().getType() + "}"
+				: prop.getType().getType();
+
+		ImmutableList.Builder<String> builder = ImmutableList.builder();
+		builder.add(fullType);
+		if(!prop.isNotNullable()) {
+			builder.add(TypeDescriptor.NULL);
+		}
+		return builder.build().toArray(new String[]{});
 	}
 
 }
