@@ -46,7 +46,7 @@
     "ts-config": "10.0.1",
     "ts-loader": "2.2.2",
     "tslint": "5.8.0",
-    "typescript": "2.4.1",
+    "typescript": "2.9.1",
     "webdav-sync": "^0.4.4",
     "webpack": "^3.2.0",
     "@types/react-router-dom": "4.2.5",

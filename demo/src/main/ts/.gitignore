@@ -2,3 +2,4 @@
 *.js
 *.jsx
 !webpack.config.js
+dist
