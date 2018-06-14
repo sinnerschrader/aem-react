@@ -171,6 +171,7 @@ public class JavascriptEngine {
 			result.html = (String) ((Map<String, Object>) value).get("html");
 			result.cache = ((Map<String, Object>) value).get("state").toString();
 			result.reactContext = ((Map<String, Object>) value).get("reactContext");
+			result.styles = (String) ((Map<String, Object>) value).get("styles");
 			return result;
 		} catch (NoSuchMethodException | ScriptException e) {
 			throw new TechnicalException("cannot render react on server", e);
