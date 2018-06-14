@@ -81,6 +81,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public String html;
 		public String cache;
 		public Object reactContext;
+		public String styles;
 	}
 
 	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
@@ -153,6 +154,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				}
 
 				String renderedHtml;
+				String renderedStyles;
 				boolean serverRendering = !SERVER_RENDERING_DISABLED
 						.equals(request.getParameter(SERVER_RENDERING_PARAM));
 				String cacheString = null;
@@ -169,6 +171,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), getWcmMode(request),
 							scriptContext, renderAsJson, reactContext, selectors);
 					renderedHtml = result.html;
+					renderedStyles = StringUtils.defaultIfEmpty(result.styles, "");
 					cacheString = result.cache;
 					request.setAttribute(REACT_CONTEXT_KEY, result.reactContext);
 				} else if (renderAsJson) {
@@ -184,9 +187,11 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					cache.put("resources", resources);
 					cacheString = cache.toString();
 					renderedHtml = "";
+					renderedStyles = "";
 				} else {
 					// initial rendering in development mode
 					renderedHtml = "";
+					renderedStyles = "";
 				}
 
 				String output;
@@ -195,7 +200,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					response.setContentType("application/json");
 				} else {
 					output = wrapHtml(mappedPath, resource, renderedHtml, serverRendering, getWcmMode(request),
-							cacheString, selectors);
+							cacheString, selectors, renderedStyles);
 
 				}
 
@@ -211,7 +216,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	}
 
-
 	/**
 	 * wrap the rendered react markup with the teaxtarea that contains the
 	 * component's props.
@@ -224,7 +228,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 * @return
 	 */
 	String wrapHtml(String mappedPath, Resource resource, String renderedHtml, boolean serverRendering, String wcmmode,
-			String cache, List<String> selectors) {
+			String cache, List<String> selectors, String renderedStyles) {
 		JSONObject reactProps = new JSONObject();
 		try {
 			if (cache != null) {
@@ -239,9 +243,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		}
 		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
 		String classString = (StringUtils.isNotEmpty(rootElementClass)) ? " class=\"" + rootElementClass + "\"" : "";
-		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
-				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >"
-				+ renderedHtml + "</" + rootElementName + ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
+		String allHtml = renderedStyles + "<" + rootElementName + " " + classString + " data-react-server=\""
+				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >" + renderedHtml + "</" + rootElementName
+				+ ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
 
 		return allHtml;
 	}
