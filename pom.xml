@@ -490,7 +490,7 @@
                 <artifactId>uber-jar</artifactId>
                 <classifier>apis</classifier>
                 <scope>provided</scope>
-                <version>6.4.0</version>
+                <version>6.3.0</version>
             </dependency>
 
             <dependency>
