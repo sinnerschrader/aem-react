@@ -49,8 +49,8 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.11.0</version>
-            <type>bundle</type>
+            <version>${sling.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

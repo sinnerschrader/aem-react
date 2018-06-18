@@ -42,6 +42,7 @@
     "tslint": "5.8.0",
     "typescript": "2.4.1",
     "webdav-sync": "0.5.0",
-    "webpack": "3.2.0"
+    "webpack": "3.2.0",
+    "xss": "0.3.4"
   }
 }
