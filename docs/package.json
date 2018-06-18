@@ -17,7 +17,6 @@
   "dependencies": {
     "bootstrap": "^3.3.6",
     "colors": "^1.1.2",
-    "count-docu": "^0.1.3",
     "file": "^0.2.2",
     "file-exists": "^2.0.0",
     "handlebars": "^4.0.5",
@@ -26,8 +25,12 @@
     "jquery": "^2.1.4",
     "marked": "^0.3.5",
     "path": "^0.12.7",
+    "request-progress": "^3.0.0",
     "sanitize-filename": "^1.6.0",
     "sync-request": "^3.0.1",
     "xml-parser": "^1.2.1"
+  },
+  "devDependencies": {
+    "count-docu": "^0.1.5"
   }
 }
