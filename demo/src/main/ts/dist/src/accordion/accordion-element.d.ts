@@ -1,4 +1,3 @@
-/// <reference types="react" />
 import * as React from "react";
 import { Resource, ResourceComponent, ResourceProps } from "aem-react-js/lib/component/ResourceComponent";
 export interface AccordionElementProps extends ResourceProps {

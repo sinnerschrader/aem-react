@@ -1,4 +1,3 @@
-/// <reference types="react" />
 import * as React from "react";
 import * as resource from "aem-react-js/lib/component/ResourceComponent";
 export interface ReactTextResource extends resource.Resource {
