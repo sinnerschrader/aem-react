@@ -102,6 +102,7 @@
                     <preparationGoals>clean install</preparationGoals>
                     <goals>install</goals>
                     <releaseProfiles>release</releaseProfiles>
+                    <tagNameFormat>aem-spa-@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <!-- Maven Source Plugin -->
