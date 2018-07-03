@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.sinnerschrader.aem.react</groupId>
+        <groupId>com.sinnerschrader.aem.spa</groupId>
         <artifactId>aem-react</artifactId>
         <version>0.24.4-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -18,7 +18,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.sinnerschrader.aem.react</groupId>
+            <groupId>com.sinnerschrader.aem.spa</groupId>
             <artifactId>aem-react-api</artifactId>
             <version>${project.version}</version>
         </dependency>

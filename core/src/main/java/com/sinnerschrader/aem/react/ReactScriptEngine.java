@@ -253,7 +253,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		ClassLoader classLoader = dynamicClassLoaderManager.getDynamicClassLoader();
 		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, mapper,
 				request.getResourceResolver());
-		return new Cqx(new Sling(ctx), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
+		return new Cqx(new Sling(ctx, modelFactory), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
 	}
 
 	/**

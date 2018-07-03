@@ -10,7 +10,7 @@
     <!-- P A R E N T P R O J E C T D E S C R I P T I O N -->
     <!-- ====================================================================== -->
     <parent>
-        <groupId>com.sinnerschrader.aem.react</groupId>
+        <groupId>com.sinnerschrader.aem.spa</groupId>
         <artifactId>aem-react</artifactId>
         <version>0.24.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -152,17 +152,17 @@
                     <group>com.sinnerschrader</group>
                     <embeddeds>
                         <embedded>
-                            <groupId>com.sinnerschrader.aem.react</groupId>
+                            <groupId>com.sinnerschrader.aem.spa</groupId>
                             <artifactId>core</artifactId>
                             <target>/apps/react-demo/install</target>
                         </embedded>
                         <embedded>
-                            <groupId>com.sinnerschrader.aem.react</groupId>
+                            <groupId>com.sinnerschrader.aem.spa</groupId>
                             <artifactId>aem-react-api</artifactId>
                             <target>/apps/react-demo/install</target>
                         </embedded>
                         <embedded>
-                            <groupId>com.sinnerschrader.aem.react</groupId>
+                            <groupId>com.sinnerschrader.aem.spa</groupId>
                             <artifactId>democore</artifactId>
                             <target>/apps/react-demo/install</target>
                         </embedded>
@@ -308,19 +308,19 @@
     <!-- ====================================================================== -->
     <dependencies>
         <dependency>
-            <groupId>com.sinnerschrader.aem.react</groupId>
+            <groupId>com.sinnerschrader.aem.spa</groupId>
             <artifactId>core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.sinnerschrader.aem.react</groupId>
+            <groupId>com.sinnerschrader.aem.spa</groupId>
             <artifactId>aem-react-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency> 
-            <groupId>com.sinnerschrader.aem.react</groupId>
+            <groupId>com.sinnerschrader.aem.spa</groupId>
             <artifactId>democore</artifactId>
             <version>${project.version}</version>
         </dependency>

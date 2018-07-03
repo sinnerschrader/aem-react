@@ -204,7 +204,7 @@ public class IntegrationTest {
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		JavascriptEngine jsEngine = new JavascriptEngine();
 		ScriptContext scriptContext = new SimpleScriptContext();
-		jsEngine.initialize(loader, new Sling(scriptContext));
+		jsEngine.initialize(loader, new Sling(scriptContext, null));
 
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false);

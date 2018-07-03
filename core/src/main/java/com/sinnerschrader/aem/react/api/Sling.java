@@ -28,6 +28,7 @@ import org.jsoup.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.adobe.cq.export.json.ComponentExporter;
 import com.day.cq.wcm.api.components.IncludeOptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -147,12 +148,15 @@ public class Sling {
 
 	private ScriptContext context;
 
+	private org.apache.sling.models.factory.ModelFactory modelFactory;
+
 	private ObjectMapper mapper;
 
-	public Sling(ScriptContext context) {
+	public Sling(ScriptContext context, org.apache.sling.models.factory.ModelFactory modelFactory) {
 		super();
 		this.context = context;
 		this.mapper = new ObjectMapper();
+		this.modelFactory = modelFactory;
 	}
 
 	/**
@@ -272,6 +276,20 @@ public class Sling {
 				.get(SlingBindings.REQUEST);
 		String pathInfo = request.getPathInfo();
 		return pathInfo;
+
+	}
+
+	public String getModel(String path) {
+		SlingHttpServletRequest request = (SlingHttpServletRequest) context.getBindings(ScriptContext.ENGINE_SCOPE)
+				.get(SlingBindings.REQUEST);
+		Resource resource = request.getResourceResolver().resolve(request, path);
+		Object exporter = modelFactory.getModelFromWrappedRequest(request, resource, ComponentExporter.class);
+
+		try {
+			return mapper.writeValueAsString(exporter);
+		} catch (JsonProcessingException e) {
+			throw new TechnicalException("cannot write json for componentExporter ", e);
+		}
 
 	}
 

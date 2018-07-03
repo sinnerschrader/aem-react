@@ -68,7 +68,7 @@ public class SlingTest {
 		Mockito.when(bindings.get(SlingBindings.REQUEST)).thenReturn(request);
 		Mockito.when(request.getResourceResolver()).thenReturn(slingCtx.resourceResolver());
 
-		Sling sling = new Sling(context);
+		Sling sling = new Sling(context, null);
 		String data = sling.getResource("/content/test", 0);
 		JsonNode tree = new ObjectMapper().readTree(data);
 		Assert.assertEquals("Willem", tree.get("name").textValue());
@@ -85,12 +85,13 @@ public class SlingTest {
 		Mockito.when(request.getResourceResolver()).thenReturn(slingCtx.resourceResolver());
 		Mockito.when(request.getResource()).thenReturn(slingCtx.currentResource("/content/test"));
 
-		Sling sling = new Sling(context);
+		Sling sling = new Sling(context, null);
 		String data = sling.currentResource(0);
 		JsonNode tree = new ObjectMapper().readTree(data);
 		Assert.assertEquals("Willem", tree.get("name").textValue());
 
 	}
+
 	@Test
 	public void testIncludeResource() throws JsonProcessingException, IOException, ServletException {
 
@@ -98,7 +99,7 @@ public class SlingTest {
 
 		includeResource(HTML, null, "s1,s2");
 
-		Sling sling = new Sling(context);
+		Sling sling = new Sling(context, null);
 		String data = sling.includeResource("/content/test", "/apps/test", null, "s1,s2", null);
 		Assert.assertEquals(HTML.trim(), data.trim());
 
@@ -111,7 +112,7 @@ public class SlingTest {
 
 		includeResource(HTML, "s1,s2", null);
 
-		Sling sling = new Sling(context);
+		Sling sling = new Sling(context, null);
 		String data = sling.includeResource("/content/test", "/apps/test", "s1,s2", null, "ul");
 		Assert.assertEquals(HTML.trim(), data.trim());
 
@@ -208,7 +209,7 @@ public class SlingTest {
 	@Test
 	public void testGetPagePath() throws JsonProcessingException, IOException, ServletException {
 
-		String expectedPath="/content/x";
+		String expectedPath = "/content/x";
 		Mockito.when(context.getBindings(ScriptContext.ENGINE_SCOPE)).thenReturn(bindings);
 		Mockito.when(bindings.get(SlingBindings.REQUEST)).thenReturn(request);
 		Mockito.when(request.getPathInfo()).thenReturn(expectedPath);
@@ -217,8 +218,6 @@ public class SlingTest {
 		Assert.assertEquals(expectedPath, path);
 
 	}
-
-
 
 	private EditDialog renderDialog(String dialogHtml)
 			throws ServletException, IOException, JsonParseException, JsonMappingException {
@@ -239,7 +238,7 @@ public class SlingTest {
 		Mockito.doAnswer(answer).when(dispatcher).include(Mockito.any(ServletRequest.class),
 				Mockito.any(ServletResponse.class));
 
-		Sling sling1 = new Sling(context);
+		Sling sling1 = new Sling(context, null);
 		Sling sling = sling1;
 		String data = sling.renderDialogScript("/content/test", "/apps/test");
 		EditDialog dialog = new ObjectMapper().readValue(data, EditDialog.class);
@@ -248,7 +247,7 @@ public class SlingTest {
 
 	private Sling createSling() {
 
-		return new Sling(context);
+		return new Sling(context, null);
 
 	}
 
