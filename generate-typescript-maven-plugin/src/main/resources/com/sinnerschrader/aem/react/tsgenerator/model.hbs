@@ -1,9 +1,9 @@
-{{#imports}}import \{{{name}}\} from '{{path}}';
+{{#imports}}import { {{~name~}} } from '{{path}}';
 {{/imports}}
 {{#unionModel}}
 export type {{name}} = {{#types}}.{{/types}};
 {{/unionModel}}
-export class {{name}} {{#superClass}}extends {{.}}{{/superClass}}  {
+export class {{name}} {{#superClasses}}extends {{.}}{{/superClasses}}  {
 {{#discriminator}}
      public readonly {{name}} = '{{value}}';
 {{/discriminator}}

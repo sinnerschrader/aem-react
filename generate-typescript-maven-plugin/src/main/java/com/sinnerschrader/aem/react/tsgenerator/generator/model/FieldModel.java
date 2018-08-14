@@ -1,43 +1,23 @@
 package com.sinnerschrader.aem.react.tsgenerator.generator.model;
 
-import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
-@Builder
+import static java.util.Objects.requireNonNull;
+
 @Getter
+@ToString
+@EqualsAndHashCode
 public class FieldModel implements Comparable<FieldModel> {
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		FieldModel other = (FieldModel) obj;
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		return true;
-	}
+	private final String name;
+	private final String[] types;
 
-	private String name;
-	private String[] types;
+	public FieldModel(String name, String... types) {
+		this.name = requireNonNull(name);
+		this.types = requireNonNull(types);
+	}
 
 	@Override
 	public int compareTo(FieldModel o) {

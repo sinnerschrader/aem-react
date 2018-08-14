@@ -33,6 +33,4 @@ public class TypeDescriptor
 
 	private String path;
 
-
-
 }

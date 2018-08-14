@@ -16,28 +16,33 @@ public class DiscriminatorPreprocessor {
 
 	public static void findDiscriminators(Class<?> type, PathMapper mapper, ScanContext ctx) {
 		JsonSubTypes subTypes = type.getAnnotation(JsonSubTypes.class);
-		JsonTypeInfo info = type.getAnnotation(JsonTypeInfo.class);
-		if (subTypes != null && info != null) {
-			List<Discriminator> discriminators = new ArrayList<>();
-			for (Type subtype : subTypes.value()) {
-				Discriminator discriminator = Discriminator.builder()//
-						.field(info.property())//
-						.value(subtype.name())//
-						.type(subtype.value())//
-						.build();
-				ctx.discriminators.put(subtype.value(), discriminator);
-				discriminators.add(discriminator);
-			}
-			UnionType unionType = UnionType.builder()//
-					.descriptor(TypeDescriptor.builder()//
-							.path(mapper.apply(type.getName()))//
-							.type(type.getSimpleName())//
-							.build())//
-					.field(info.property())//
-					.discriminators(discriminators)//
-					.build();
-			ctx.unionTypes.put(type, unionType);
+		if (subTypes == null) {
+			return;
 		}
+		JsonTypeInfo info = type.getAnnotation(JsonTypeInfo.class);
+		if (info == null) {
+			return;
+		}
+
+		List<Discriminator> discriminators = new ArrayList<>();
+		for (Type subtype : subTypes.value()) {
+			Discriminator discriminator = Discriminator.builder()//
+					.field(info.property())//
+					.value(subtype.name())//
+					.type(subtype.value())//
+					.build();
+			ctx.discriminators.put(subtype.value(), discriminator);
+			discriminators.add(discriminator);
+		}
+		UnionType unionType = UnionType.builder()//
+				.descriptor(TypeDescriptor.builder()//
+						.path(mapper.apply(type.getName()))//
+						.type(type.getSimpleName())//
+						.build())//
+				.field(info.property())//
+				.discriminators(discriminators)//
+				.build();
+		ctx.unionTypes.put(type, unionType);
 	}
 
 }

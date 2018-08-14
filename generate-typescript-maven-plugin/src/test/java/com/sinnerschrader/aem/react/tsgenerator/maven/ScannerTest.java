@@ -3,13 +3,13 @@ package com.sinnerschrader.aem.react.tsgenerator.maven;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.ClassDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.descriptor.EnumDescriptor;
-import com.sinnerschrader.aem.react.tsgenerator.descriptor.UnionType;
 import com.sinnerschrader.aem.reactapi.typescript.ExportTs;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ScannerTest {
 	@Test
@@ -21,15 +21,11 @@ public class ScannerTest {
 
 		final List<ClassDescriptor> cds = new ArrayList<>();
 		final List<EnumDescriptor> eds = new ArrayList<>();
-		final List<UnionType> uts = new ArrayList<>();
-		scanner.scan((ClassDescriptor cd) -> {
-			cds.add(cd);
-		}, (EnumDescriptor ed) -> {
-			eds.add(ed);
-		});
+		// final List<UnionType> uts = new ArrayList<>();
+		scanner.scan(cds::add, eds::add);
 
-		Assert.assertEquals(10, cds.size());
-		Assert.assertEquals(0, uts.size());
-		Assert.assertEquals(0, eds.size());
+		assertThat(cds).hasSize(17);
+		// Assert.assertEquals(0, uts.size());
+		assertThat(eds).isEmpty();
 	}
 }

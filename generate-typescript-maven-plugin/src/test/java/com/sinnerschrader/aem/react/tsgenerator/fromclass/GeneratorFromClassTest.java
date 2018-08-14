@@ -1,6 +1,5 @@
 package com.sinnerschrader.aem.react.tsgenerator.fromclass;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ import com.sinnerschrader.aem.react.tsgenerator.descriptor.TypeDescriptor;
 import com.sinnerschrader.aem.react.tsgenerator.generator.PathMapper;
 import com.sinnerschrader.aem.react.tsgenerator.generator.TestModel;
 import com.sinnerschrader.aem.react.tsgenerator.generator.TestValue;
-import com.sinnerschrader.aem.reactapi.typescript.Element;
 
 public class GeneratorFromClassTest {
 
@@ -52,7 +50,7 @@ public class GeneratorFromClassTest {
 	}
 
 	@Test
-	public void converComplexArray() {
+	public void convertComplexArray() {
 		TypeDescriptor type = GeneratorFromClass.convertType(TestModel[].class, null, mapper);
 
 		Assert.assertEquals("TestModel", type.getType());
@@ -61,40 +59,43 @@ public class GeneratorFromClassTest {
 	}
 
 	@Test
-	public void converComplexList() {
-		TypeDescriptor type = GeneratorFromClass.convertType(List.class,createElement(TestModel.class),mapper);
+	public void convertAnyArray() {
+		TypeDescriptor type = GeneratorFromClass.convertType(Object[].class, new ClassBean("any"), mapper);
 
-		Assert.assertEquals("TestModel",type.getType());
+		Assert.assertEquals("any", type.getType());
+		Assert.assertTrue(type.isArray());
+
+	}
+
+	@Test
+	public void converComplexList() {
+		TypeDescriptor type = GeneratorFromClass.convertType(List.class, createElement(TestModel.class), mapper);
+
+		Assert.assertEquals("TestModel", type.getType());
 		Assert.assertTrue(type.isArray());
 
 	}
 
 	@Test
 	public void converComplexMap() {
-		TypeDescriptor type = GeneratorFromClass.convertType(Map.class,createElement(TestModel.class),mapper);
+		TypeDescriptor type = GeneratorFromClass.convertType(Map.class, createElement(TestModel.class), mapper);
 
-		Assert.assertEquals("TestModel",type.getType());
+		Assert.assertEquals("TestModel", type.getType());
 		Assert.assertTrue(type.isMap());
 
 	}
 
 	@Test
 	public void converPrimitiveList() {
-		TypeDescriptor type = GeneratorFromClass.convertType(List.class,createElement(String.class),mapper);
+		TypeDescriptor type = GeneratorFromClass.convertType(List.class, createElement(String.class), mapper);
 
-		Assert.assertEquals("string",type.getType());
+		Assert.assertEquals("string", type.getType());
 		Assert.assertTrue(type.isArray());
 
 	}
 
-	private Element createElement(final Class<?> clazz) {
-		return new Element() {@Override
-			public Class<?>value() {return clazz;}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Element.class;
-		}};
+	private ClassBean createElement(final Class<?> clazz) {
+		return new ClassBean(clazz);
 	}
 
 	@Test

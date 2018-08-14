@@ -2,10 +2,14 @@ package com.sinnerschrader.aem.react.tsgenerator.generator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import com.sinnerschrader.aem.react.tsgenerator.descriptor.ExtendedInterface;
+import com.sinnerschrader.aem.react.tsgenerator.descriptor.UnionType;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 
@@ -46,54 +50,49 @@ public class TypeScriptGenerator {
 		}
 	}
 
-	public InterfaceModel generateModel(ClassDescriptor descriptor) {
-
-		PathMapper pathMapper = new PathMapper(descriptor.getFullJavaClassName());
+	public InterfaceModel generateModel(final ClassDescriptor descriptor) {
 		SortedSet<ImportModel> imports = new TreeSet<>();
-		String superclass = null;
+		List<String> superClasses = new ArrayList<>();
 		if (descriptor.getSuperClass() != null) {
 			TypeDescriptor sct = descriptor.getSuperClass();
-			superclass = sct.getType();
-			imports.add(ImportModel.builder()//
-					.name(sct.getType())//
-					.path(sct.getPath())//
-					.build());
+			superClasses.add(sct.getType());
+			imports.add(new ImportModel(sct.getType(), sct.getPath()));
+		}
+
+		for (ExtendedInterface ei : descriptor.getExtendedInterfaces().values()) {
+			ImportModel importModel = new ImportModel(ei.getName(), ei.getPath());
+			imports.add(importModel);
+			superClasses.add(importModel.getName());
 		}
 
 		SortedSet<FieldModel> fields = new TreeSet<>();
 		for (PropertyDescriptor prop : descriptor.getProperties().values()) {
-			if (prop.getType().isExtern()) {
-				imports.add(ImportModel.builder()//
-						.name(prop.getType().getType())//
-						.path(prop.getType().getPath())//
-						.build());
+			TypeDescriptor propType = prop.getType();
+			if (propType.isExtern()) {
+				imports.add(new ImportModel(propType.getType(), propType.getPath()));
 			}
 
-			final String fullType = prop.getType().isArray() ? prop.getType().getType() + "[]"
-					: prop.getType().isMap() ? "{[key: string]: " + prop.getType().getType() + "}"
-							: prop.getType().getType();
-			fields.add(FieldModel.builder()//
-					.name(prop.getName())//
-					.types(new String[] { fullType })//
-					.build());
+			final String fullType = propType.isArray()
+					? propType.getType() + "[]"
+					: propType.isMap()
+						? "{[key: string]: " + propType.getType() + "}"
+						: propType.getType();
+			fields.add(new FieldModel(prop.getName(), fullType));
 		}
 
 		UnionModel unionModel = null;
-		if (descriptor.getUnionType() != null) {
-			descriptor.getUnionType().getDiscriminators().stream()//
-					.forEach((Discriminator d) -> {
-						imports.add(ImportModel.builder()//
-								.name(d.getType().getSimpleName())//
-								.path(pathMapper.apply(d.getType().getName()))//
-								.build());
-					});
+		UnionType unionType = descriptor.getUnionType();
+		if (unionType != null) {
+			PathMapper pathMapper = new PathMapper(descriptor.getFullJavaClassName());
+			for (Discriminator d : unionType.getDiscriminators()) {
+				String mappedPath = pathMapper.apply(d.getType().getName());
+				imports.add(new ImportModel(d.getType().getSimpleName(), mappedPath));
+			}
 			unionModel = UnionModel.builder()//
-					.name(descriptor.getUnionType().getDescriptor().getType())//
-					.field(descriptor.getUnionType().getField())//
-					.types(descriptor.getUnionType().getDiscriminators().stream()//
-							.map((Discriminator d) -> {
-								return d.getType().getSimpleName();
-							})//
+					.name(unionType.getDescriptor().getType())//
+					.field(unionType.getField())//
+					.types(unionType.getDiscriminators().stream()//
+							.map((Discriminator d) -> d.getType().getSimpleName())//
 							.collect(Collectors.toList()))//
 					.build();
 		}
@@ -104,9 +103,12 @@ public class TypeScriptGenerator {
 					.value(descriptor.getDiscriminator().getValue())//
 					.build();
 		}
+
+		String superclasses = String.join(", ", superClasses);
+
 		InterfaceModel model = InterfaceModel.builder()//
 				.name(descriptor.getName())//
-				.superclass(superclass)//
+				.superClasses(superclasses)//
 				.unionModel(unionModel)//
 				.fullSlingModelName(descriptor.getFullJavaClassName())//
 				.fields(fields)//
@@ -118,7 +120,7 @@ public class TypeScriptGenerator {
 	}
 
 	public String generate(InterfaceModel model) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		Handlebars handleBars = new Handlebars();
 		try {
 			handleBars.registerHelper("join", StringHelpers.join);
@@ -142,7 +144,6 @@ public class TypeScriptGenerator {
 		}
 		String content = FileUtils.readFileToString(file);
 		return new StringTemplateSource(file.getAbsolutePath(), content);
-
 	}
 
 }
