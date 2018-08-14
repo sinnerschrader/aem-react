@@ -1,13 +1,12 @@
 package com.sinnerschrader.aem.react.tsgenerator.generator;
 
-public class PathMapper {
+public class PathMapper implements IPathMapper {
+
+	private final String currents[];
 
 	public PathMapper(String current) {
 		currents = current.split("\\.");
-
 	}
-
-	private String currents[];
 
 	public String apply(final String name) {
 		String[] names = name.split("\\.");
@@ -30,7 +29,6 @@ public class PathMapper {
 		}
 		builder.append(names[names.length - 1]);
 		return builder.toString();
-
 	}
 
 }

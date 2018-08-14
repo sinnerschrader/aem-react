@@ -5,10 +5,12 @@ import java.util.Map;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Singular;
 
 @Getter
 @Builder
 public class ClassDescriptor {
+
 	private String name;
 
 	private String fullJavaClassName;
@@ -19,8 +21,11 @@ public class ClassDescriptor {
 
 	private TypeDescriptor superClass;
 
-	private final Map<String, PropertyDescriptor> properties = new LinkedHashMap<String, PropertyDescriptor>();
+	@Singular
+	private Map<String, PropertyDescriptor> properties;
 
-	private final Map<String, EnumDescriptor> enums = new LinkedHashMap<String, EnumDescriptor>();
+	private final Map<String, EnumDescriptor> enums = new LinkedHashMap<>();
 
+	@Singular
+	private Map<String, ExtendedInterface> extendedInterfaces;
 }

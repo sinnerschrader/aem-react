@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
@@ -32,6 +35,12 @@ public class GenerateTsMojo extends AbstractMojo {
 	@Parameter
 	private String basePackage;
 
+	@Parameter
+	private String typeScriptRelativeBasePath;
+
+	@Parameter
+	private TsElementDefault[] tsElementDefaults;
+
 	@Parameter(defaultValue = "utf-8")
 	private String encoding;
 
@@ -49,6 +58,8 @@ public class GenerateTsMojo extends AbstractMojo {
 		Scanner scanner = Scanner.builder()//
 				.annotationClass(annotationClass)//
 				.basePackage(basePackage)//
+				.baseTypeScriptPath(this.typeScriptRelativeBasePath)
+				.tsElementDefaults(asList(this.tsElementDefaults))
 				.log(getLog())//
 				.build();
 
@@ -60,27 +71,38 @@ public class GenerateTsMojo extends AbstractMojo {
 		scanner.scan((ClassDescriptor cd) -> {
 			InterfaceModel m = typeScriptGenerator.generateModel(cd);
 			String s = typeScriptGenerator.generate(m);
-			String relPath = cd.getFullJavaClassName().substring(basePackage.length() + 1).replace('.', '/');
-			File targetFile = new File(targetDirectory, relPath + ".ts").getAbsoluteFile();
+			File targetFile = createTargetFile(cd.getFullJavaClassName());
 			writeStringToFile(s, targetFile);
 		}, (EnumDescriptor ed) -> {
 			String s = typeScriptGenerator.generateEnum(ed);
-			String relPath = ed.getFullJavaClassName().substring(basePackage.length() + 1).replace('.', '/');
-			File targetFile = new File(targetDirectory, relPath + ".ts").getAbsoluteFile();
+			File targetFile = createTargetFile(ed.getFullJavaClassName());
 			writeStringToFile(s, targetFile);
 		});
+	}
 
+	private static <T> List<T> asList(T[] values) {
+		if (values == null || values.length == 0) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(values);
 	}
 
 	private void prepare(File f) {
 		if (!f.exists()) {
-			f.mkdirs();
+			if (!f.mkdirs()) {
+				throw new RuntimeException("Could not create directory " + f);
+			}
 		}
 	}
 
+	private File createTargetFile(String fullJavaClassName) {
+		String relPath = fullJavaClassName.substring(basePackage.length() + 1).replace('.', '/');
+		return new File(targetDirectory, relPath + ".ts").getAbsoluteFile();
+	}
+
 	private void writeStringToFile(String s, File target) {
-		getLog().info("generating " + target.getAbsolutePath());
-		target.getParentFile().mkdirs();
+		getLog().info("Generating " + target.getAbsolutePath());
+		prepare(target.getParentFile());
 		try (FileWriter fw = new FileWriter(target)) {
 			IOUtils.copy(new StringReader(s), fw);
 		} catch (IOException e) {

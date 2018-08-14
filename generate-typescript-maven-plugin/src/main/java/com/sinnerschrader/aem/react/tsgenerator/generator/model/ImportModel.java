@@ -1,13 +1,17 @@
 package com.sinnerschrader.aem.react.tsgenerator.generator.model;
 
-import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
 public class ImportModel implements Comparable<ImportModel> {
-	private String name;
-	private String path;
+
+	private final String name;
+	private final String path;
+
+	public ImportModel(String name, String path) {
+		this.name = name;
+		this.path = path;
+	}
 
 	@Override
 	public int compareTo(ImportModel o) {

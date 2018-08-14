@@ -8,9 +8,10 @@ import lombok.Getter;
 @Builder
 @Getter
 public class InterfaceModel implements Comparable<InterfaceModel> {
+
 	private SortedSet<FieldModel> fields;
 	private String name;
-	private String superclass;
+	private String superClasses;
 	private String fullSlingModelName;
 	private SortedSet<ImportModel> imports;
 	private UnionModel unionModel;
