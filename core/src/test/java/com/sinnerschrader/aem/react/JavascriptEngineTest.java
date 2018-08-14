@@ -44,11 +44,11 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoChanges() {
-		JavascriptEngine engine = new JavascriptEngine();
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(loader, sling);
+		engine.initialize();
 
 		// check that only the checksum is relevant
 		scripts.clear();
@@ -61,11 +61,11 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testChanges() {
-		JavascriptEngine engine = new JavascriptEngine();
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(loader, sling);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -78,11 +78,11 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine();
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(loader, sling);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -93,11 +93,11 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testMoreScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine();
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(loader, sling);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -122,12 +122,12 @@ public class JavascriptEngineTest {
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine();
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 		List<HashedScript> scripts = new ArrayList<>();
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		engine.initialize(loader, sling);
+		engine.initialize();
 
 		List<String> selectors = new ArrayList() {
 			{

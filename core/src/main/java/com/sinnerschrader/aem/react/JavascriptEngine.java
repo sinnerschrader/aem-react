@@ -36,6 +36,8 @@ public class JavascriptEngine {
 	private ScriptEngine engine;
 	private Map<String, String> scriptChecksums;
 	private ComponentMetricsService metricsService;
+	private boolean initialized = false;
+	private Object sling;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -112,25 +114,34 @@ public class JavascriptEngine {
 		}
 	}
 
+	public JavascriptEngine(ScriptCollectionLoader loader, Object sling) {
+		this.loader = loader;
+		this.sling = sling;
+	}
+
 	/**
 	 * initialize this instance. creates a javascript engine and loads the
 	 * javascript files. Instances of this class are not thread-safe.
 	 *
-	 * @param loader
-	 * @param sling
 	 */
-	public void initialize(ScriptCollectionLoader loader, Object sling) {
+	public void initialize() {
+		if(this.initialized) {
+			return;
+		}
+
 		ScriptEngineManager scriptEngineManager = new ScriptEngineManager(null);
 		engine = scriptEngineManager.getEngineByName("nashorn");
 		engine.getContext().setErrorWriter(new Print());
 		engine.getContext().setWriter(new Print());
 		engine.put("console", new Console());
-		engine.put("Sling", sling);
-		this.loader = loader;
+		engine.put("Sling", this.sling);
 		loadJavascriptLibrary();
+
+		this.initialized = true;
 	}
 
 	private void loadJavascriptLibrary() {
+		long t0 = System.currentTimeMillis();
 
 		scriptChecksums = new HashMap<>();
 		Iterator<HashedScript> iterator = loader.iterator();
@@ -144,6 +155,8 @@ public class JavascriptEngine {
 				throw new TechnicalException("cannot eval library script", e);
 			}
 		}
+		long t1 = System.currentTimeMillis();
+		LOGGER.info("JavascriptEngine.loadJavascriptLibrary complete: " + (t1-t0) + "(t: " + Thread.currentThread().getId() + ")");
 
 	}
 
@@ -159,20 +172,29 @@ public class JavascriptEngine {
 	 */
 	public RenderResult render(String path, String resourceType, String wcmmode, Cqx cqx, boolean renderAsJson,
 			Object reactContext, List<String> selectors) {
+		long startTime = System.currentTimeMillis();
+
+		if(!this.initialized) {
+			throw new IllegalStateException("JavascriptEngine is not initialized");
+		}
 
 		Invocable invocable = ((Invocable) engine);
 		try {
 			engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
 			Object AemGlobal = engine.get("AemGlobal");
 			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, wcmmode,
-					renderAsJson, reactContext, selectors.toArray(new String[selectors.size()]));
+					renderAsJson, /*reactContext*/ null, selectors.toArray(new String[selectors.size()]));
 
 			RenderResult result = new RenderResult();
 			result.html = (String) ((Map<String, Object>) value).get("html");
 			result.cache = ((Map<String, Object>) value).get("state").toString();
 			result.reactContext = ((Map<String, Object>) value).get("reactContext");
+			long duration = System.currentTimeMillis() - startTime;
+			LOGGER.info("JavascriptEngine.render duration: " + duration + " (t: " + Thread.currentThread().getId() + ")");
 			return result;
 		} catch (NoSuchMethodException | ScriptException e) {
+			long duration = System.currentTimeMillis() - startTime;
+			LOGGER.info("JavascriptEngine.render error duration: " + duration + " (t: " + Thread.currentThread().getId() + ")");
 			throw new TechnicalException("cannot render react on server", e);
 		}
 	}

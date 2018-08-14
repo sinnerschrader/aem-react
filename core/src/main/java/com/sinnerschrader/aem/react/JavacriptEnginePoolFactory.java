@@ -19,7 +19,6 @@ import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
  */
 public class JavacriptEnginePoolFactory extends BasePooledObjectFactory<JavascriptEngine> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JavacriptEnginePoolFactory.class);
 	private ScriptCollectionLoader loader;
 	private Object sling;
 
@@ -30,10 +29,7 @@ public class JavacriptEnginePoolFactory extends BasePooledObjectFactory<Javascri
 
 	@Override
 	public JavascriptEngine create() throws Exception {
-		LOGGER.debug("created new javascript engine");
-		JavascriptEngine javascriptEngine = new JavascriptEngine();
-		javascriptEngine.initialize(loader, sling);
-		return javascriptEngine;
+		return new JavascriptEngine(loader, sling);
 	}
 
 	@Override
