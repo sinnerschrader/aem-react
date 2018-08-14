@@ -56,6 +56,7 @@ import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "total javascript engine pool size", longValue = 5), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name", value = "div"), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_CLASS_NAME, label = "the root element class name", value = ""), //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resolver", value = "^/content"), //
@@ -66,9 +67,12 @@ import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 })
 public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
+	private static final Logger LOG = LoggerFactory.getLogger(ReactScriptEngineFactory.class);
+
 	public static final String PROPERTY_SCRIPTS_PATHS = "scripts.paths";
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
 	public static final String PROPERTY_POOL_TOTAL_SIZE = "pool.total.size";
+	public static final String PROPERTY_POOL_MIN_SIZE = "pool.min.size";
 	public static final String PROPERTY_ROOT_ELEMENT_NAME = "root.element.name";
 	public static final String PROPERTY_ROOT_CLASS_NAME = "root.element.class.name";
 	public static final String PROPERTY_ENABLE_REVERSE_MAPPING = "mapping.reverse.enable";
@@ -150,7 +154,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 			byte[] checksum = MessageDigest.getInstance("MD5").digest(script.getBytes("UTF-8"));
 			return new HashedScript(new String(Base64.getEncoder().encode(checksum), "UTF-8"), script, id);
 		} catch (IOException | NoSuchAlgorithmException e) {
-			throw new TechnicalException("cannot created hashed script " + id, e);
+			throw new TechnicalException("cannot create hashed script " + id, e);
 		}
 	}
 
@@ -198,8 +202,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.disableMapping = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MAPPING_DISABLE), false);
 		this.enableReverseMapping = !disableMapping
 				&& PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_ENABLE_REVERSE_MAPPING), false);
-		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(
-				createLoader(scriptResources), null);
+		ScriptCollectionLoader loader = createLoader(scriptResources);
+		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null);
 
 		String includePattern = disableMapping ? null
 				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_INCLUDE_PATTERN),
@@ -216,6 +220,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		try {
 			initialized=false;
 			initializeScripts();
+			int minEngineCount = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_MIN_SIZE), 5);
+			initializeEngines(pool, minEngineCount);
 		} catch (Exception e) {
 			LOGGER.info("cannot load and listen to script on initialize. will try again later", e);
 		}
@@ -294,4 +300,22 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		return dynamicClassLoader;
 	}
 
+	private void initializeEngines(ObjectPool<JavascriptEngine> pool, int minEngineCount) {
+		try {
+			JavascriptEngine[] engines = new JavascriptEngine[minEngineCount];
+			for (int i=minEngineCount; i > 0; --i) {
+				JavascriptEngine engine = pool.borrowObject();
+				engine.initialize();
+				engines[i-1] = engine;
+			}
+
+			for (int i=minEngineCount; i > 0; --i) {
+				pool.returnObject(engines[i-1]);
+			}
+
+			LOG.info(pool.getNumActive() + pool.getNumIdle() + " engines initialized");
+		} catch (Exception e) {
+			LOG.error("Unable to initialize script engines", e);
+		}
+	}
 }
