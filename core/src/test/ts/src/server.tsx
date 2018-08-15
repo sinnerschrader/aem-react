@@ -17,8 +17,8 @@ AemGlobal.registry = rootComponentRegistry;
 /*tslint:disable-next-line*/
 declare var Java: any;
 
-AemGlobal.renderReactComponent = function (path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
-                                           reactContext: ReactContext, javaSelectors: object): any {
+AemGlobal.renderReactComponent = function (path: string, resourceType: string, rootNo:string, wcmmode: string, renderRootDialog: boolean,
+                                           javaSelectors: object): any {
     const selectors: string[] = Java.from(javaSelectors);
 
     const cache: Cache = new Cache();

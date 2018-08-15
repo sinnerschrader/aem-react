@@ -167,8 +167,7 @@ public class JavascriptEngine {
 	 *            API object for current request
 	 * @return
 	 */
-	public RenderResult render(String path, String resourceType, String wcmmode, Cqx cqx, boolean renderAsJson,
-			Object reactContext, List<String> selectors) {
+	public RenderResult render(String path, String resourceType, int rootNo, String wcmmode, Cqx cqx, boolean renderAsJson, List<String> selectors) {
 		long startTime = System.currentTimeMillis();
 
 		if(!this.initialized) {
@@ -179,13 +178,13 @@ public class JavascriptEngine {
 		try {
 			engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
 			Object AemGlobal = engine.get("AemGlobal");
-			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, wcmmode,
-					renderAsJson, /*reactContext*/ null, selectors.toArray(new String[selectors.size()]));
+			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, String.valueOf(rootNo), wcmmode,
+					renderAsJson, selectors.toArray(new String[selectors.size()]));
 
 			RenderResult result = new RenderResult();
 			result.html = (String) ((Map<String, Object>) value).get("html");
 			result.cache = ((Map<String, Object>) value).get("state").toString();
-			result.reactContext = ((Map<String, Object>) value).get("reactContext");
+			// result.reactContext = (String) ((Map<String, Object>) value).get("reactContext");
 			long duration = System.currentTimeMillis() - startTime;
 			LOGGER.debug("JavascriptEngine.render took: " + duration + "ms");
 			return result;

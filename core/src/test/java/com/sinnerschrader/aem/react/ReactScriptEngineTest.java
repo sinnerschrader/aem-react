@@ -42,7 +42,6 @@ import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 @RunWith(MockitoJUnitRunner.class)
 public class ReactScriptEngineTest {
 
-
 	@Rule
 	public SlingContext slingContext = new SlingContext();
 
@@ -57,7 +56,6 @@ public class ReactScriptEngineTest {
 
 	@Mock
 	private DynamicClassLoaderManager dynamicClassLoaderManager;
-
 
 	@Mock
 	private ObjectPool<JavascriptEngine> enginePool;
@@ -89,15 +87,13 @@ public class ReactScriptEngineTest {
 	@Before
 	public void setup() {
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
-		 scriptContext = new SimpleScriptContext();
+		scriptContext = new SimpleScriptContext();
 		StringWriter writer = new StringWriter();
 		scriptContext.setWriter(writer);
 		Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
 		bindings.put(SlingBindings.REQUEST, slingContext.request());
 		bindings.put(SlingBindings.RESPONSE, slingContext.response());
 		bindings.put(SlingBindings.SLING, slingContext.slingScriptHelper());
-
-
 
 	}
 
@@ -108,16 +104,15 @@ public class ReactScriptEngineTest {
 
 		RenderResult result = expectResult();
 
-
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(false), Matchers.eq(null), Matchers.eq(new ArrayList<>())))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
@@ -152,18 +147,17 @@ public class ReactScriptEngineTest {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
 
-
 		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(false), Matchers.eq(null), Matchers.eq(new ArrayList<>())))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
@@ -190,19 +184,19 @@ public class ReactScriptEngineTest {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
 
-
 		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
 		slingContext.request().setQueryString("serverRendering=disabled");
 
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(false), Matchers.eq(null), Matchers.eq(new ArrayList<>())))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(false),  Matchers.eq(new ArrayList<>())))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
@@ -222,31 +216,23 @@ public class ReactScriptEngineTest {
 
 	}
 
-
-
-
-
 	@Test
 	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
 
-
-
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 		slingContext.request().setAttribute(Sling.ATTRIBUTE_AEM_REACT_DIALOG, true);
-
 
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
 
-
-		Assert.assertEquals("",renderedHtml);
+		Assert.assertEquals("", renderedHtml);
 
 	}
 
@@ -256,31 +242,29 @@ public class ReactScriptEngineTest {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
 
-
-
 		slingContext.requestPathInfo().setSelectorString("json");
-
-
 
 		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(true), Matchers.eq(null), Matchers.eq(new ArrayList() {{add("json");}})))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(true),  Matchers.eq(new ArrayList() {
+							{
+								add("json");
+							}
+						})))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
 
 		Assert.assertEquals("{\"cache\":true}", renderedHtml);
-
-
 
 	}
 
@@ -289,52 +273,51 @@ public class ReactScriptEngineTest {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
 
-
-
 		slingContext.requestPathInfo().setSelectorString("json");
 		slingContext.request().setQueryString("serverRendering=disabled");
-
 
 		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(true), Matchers.eq(null), Matchers.eq(new ArrayList() {{add("json");}})))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(true),  Matchers.eq(new ArrayList() {
+							{
+								add("json");
+							}
+						})))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
 
-		Assert.assertEquals("{\"resources\":{\"/content/page/test\":{\"depth\":-1,\"data\":{\"sling:resourceType\":\"/apps/test\"}}}}", renderedHtml);
-
-
+		Assert.assertEquals(
+				"{\"resources\":{\"/content/page/test\":{\"depth\":-1,\"data\":{\"sling:resourceType\":\"/apps/test\"}}}}",
+				renderedHtml);
 
 	}
-
 
 	@Test
 	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
 				"test xxx", null, null, null, new ComponentMetricsService(), true, false, false);
 
-
 		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
 
-		Resource resource = slingContext.create().resource(path, "sling:resourceType",resourceType);
+		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-
-		Mockito.when(engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq("disabled"),
-				Mockito.anyObject(), Matchers.eq(false), Matchers.eq(null), Matchers.eq(new ArrayList<>())))
+		Mockito.when(
+				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
+						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
 				.thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
@@ -357,6 +340,6 @@ public class ReactScriptEngineTest {
 	}
 
 	private String getRenderedHtml() {
-		return ((StringWriter)scriptContext.getWriter()).getBuffer().toString();
+		return ((StringWriter) scriptContext.getWriter()).getBuffer().toString();
 	}
 }
