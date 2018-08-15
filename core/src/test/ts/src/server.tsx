@@ -1,4 +1,4 @@
-import {ReactContext, ServerRenderer} from "aem-react-js/lib/ServerRenderer";
+import {ServerRenderer} from "aem-react-js/lib/ServerRenderer";
 import {RootComponentRegistry} from "aem-react-js/lib/RootComponentRegistry";
 import componentRegistry from "./componentRegistry";
 import {Container} from "aem-react-js/lib/di/Container";
