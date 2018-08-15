@@ -28,8 +28,6 @@
         <module>core</module>
         <module>generate-typescript-maven-plugin</module>
         <module>aem-react-api</module>
-        <module>democore</module>
-        <module>demo</module>
     </modules>
 
     <scm>
