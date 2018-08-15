@@ -134,15 +134,14 @@ public class JavascriptEngineTest {
 				this.add("s1");
 			}
 		};
-		Object reactContext = new Object();
-		RenderResult result = engine.render("/content", "/apps/test", "disabled", new MockCqx(), false, reactContext,
+		RenderResult result = engine.render("/content", "/apps/test", 1, "disabled", new MockCqx(), false,
 				selectors);
 		Assert.assertEquals("my html", result.html);
 		JsonNode tree = new ObjectMapper().readTree(result.cache);
 		Assert.assertEquals("/content", tree.get("path").textValue());
 		Assert.assertEquals("s1", tree.get("selectors").get(0).textValue());
 		Assert.assertEquals(MockCqx.CQX_RESPONSE, tree.get("cqx").textValue());
-		Assert.assertEquals(reactContext, result.reactContext);
+		//Assert.assertEquals(reactContext, result.reactContext);
 	}
 
 	@Test

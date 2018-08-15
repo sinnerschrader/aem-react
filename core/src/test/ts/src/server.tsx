@@ -1,4 +1,4 @@
-import {ReactContext, ServerRenderer} from "aem-react-js/lib/ServerRenderer";
+import {ServerRenderer} from "aem-react-js/lib/ServerRenderer";
 import {RootComponentRegistry} from "aem-react-js/lib/RootComponentRegistry";
 import componentRegistry from "./componentRegistry";
 import {Container} from "aem-react-js/lib/di/Container";
@@ -17,8 +17,8 @@ AemGlobal.registry = rootComponentRegistry;
 /*tslint:disable-next-line*/
 declare var Java: any;
 
-AemGlobal.renderReactComponent = function (path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
-                                           reactContext: ReactContext, javaSelectors: object): any {
+AemGlobal.renderReactComponent = function (path: string, resourceType: string, rootNo:string, wcmmode: string, renderRootDialog: boolean,
+                                           javaSelectors: object): any {
     const selectors: string[] = Java.from(javaSelectors);
 
     const cache: Cache = new Cache();

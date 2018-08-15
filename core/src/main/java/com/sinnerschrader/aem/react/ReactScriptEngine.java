@@ -48,6 +48,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	private static final String JSON_RENDER_SELECTOR = "json";
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
+	private static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
+
 	private static final String CURRENT_COMPONENT_ID_KEY = ReactScriptEngine.class.getName() + "_CURRENT_COMPONENT_ID";
 
 	public interface Command {
@@ -80,7 +82,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	public static class RenderResult {
 		public String html;
 		public String cache;
-		public Object reactContext;
 	}
 
 	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
@@ -167,12 +168,18 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				}
 
 				if (serverRendering) {
-					final Object reactContext = request.getAttribute(REACT_CONTEXT_KEY);
-					RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), getWcmMode(request),
-							scriptContext, renderAsJson, reactContext, selectors);
+                    final String reactContext = (String) request.getAttribute(REACT_CONTEXT_KEY);
+                    Integer rootNo = (Integer) request.getAttribute(REACT_ROOT_NO_KEY);
+                    if (rootNo == null) {
+                        rootNo = 1;
+                    } else {
+                        rootNo = rootNo + 1;
+                    }
+                    request.setAttribute(REACT_ROOT_NO_KEY, rootNo);
+                    RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), rootNo,
+                            getWcmMode(request), scriptContext, renderAsJson, reactContext, selectors);
 					renderedHtml = result.html;
 					cacheString = result.cache;
-					request.setAttribute(REACT_CONTEXT_KEY, result.reactContext);
 				} else if (renderAsJson) {
 					// development mode: return cache with just the current
 					// resource.
@@ -212,7 +219,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		}
 	}
 
-
 	/**
 	 * wrap the rendered react markup with the teaxtarea that contains the component's props.
 	 * @param mappedPath
@@ -241,8 +247,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
 		String classString = (StringUtils.isNotEmpty(rootElementClass)) ? " class=\"" + rootElementClass + "\"" : "";
 		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
-				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >"
-				+ renderedHtml + "</" + rootElementName + ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
+				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >" + renderedHtml + "</" + rootElementName
+				+ ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
 
 		return allHtml;
 	}
@@ -268,9 +274,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 * @param selectors
 	 * @return
 	 */
-	private RenderResult renderReactMarkup(String mappedPath, String resourceType, String wcmmode,
-			ScriptContext scriptContext, boolean renderAsJson, Object reactContext, List<String> selectors) {
-		long start = System.currentTimeMillis();
+	private RenderResult renderReactMarkup(String mappedPath, String resourceType, int rootNo, String wcmmode,
+			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors) {
+        long start = System.currentTimeMillis();
 		JavascriptEngine javascriptEngine;
 		boolean removeMapper = false;
 		try {
@@ -285,8 +291,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					enginePool.invalidateObject(javascriptEngine);
 					javascriptEngine = enginePool.borrowObject();
 				}
-				return javascriptEngine.render(mappedPath, resourceType, wcmmode, createCqx(scriptContext),
-						renderAsJson, reactContext, selectors);
+				return javascriptEngine.render(mappedPath, resourceType, rootNo, wcmmode, createCqx(scriptContext),
+						renderAsJson, selectors);
 			} finally {
 
 				try {
