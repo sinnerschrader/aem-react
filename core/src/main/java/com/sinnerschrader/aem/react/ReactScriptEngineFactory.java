@@ -266,8 +266,11 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(poolTotalSize);
 		config.setMaxIdle(poolTotalSize);
-		config.setMinIdle(2);
+		config.setMinIdle(0);
+		config.setLifo(false);
 		config.setFairness(true);
+		config.setBlockWhenExhausted(true);
+		config.setMaxWaitMillis(10000);
 		config.setJmxEnabled(true);
 		return new GenericObjectPool<JavascriptEngine>(javacriptEnginePoolFactory, config);
 	}
