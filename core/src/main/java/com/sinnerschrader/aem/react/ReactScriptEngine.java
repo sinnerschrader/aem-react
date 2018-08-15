@@ -51,7 +51,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private static final String CURRENT_COMPONENT_ID_KEY = ReactScriptEngine.class.getName() + "_CURRENT_COMPONENT_ID";
 
 	public interface Command {
-		public Object execute(JavascriptEngine e);
+		Object execute(JavascriptEngine e);
 	}
 
 	public static final String SERVER_RENDERING_DISABLED = "disabled";
@@ -105,25 +105,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	@Override
 	public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
-		long tRev1;
-		long rRev2 = 0;
-		long tSel1;
-		long tSel2 = 0;
-		long tRender1;
-		long tRender2 = 0;
-		long tRender3 = 0;
-		long tRender4 = 0;
-		long tRender5 = 0;
-		long tRender6 = 0;
-		long tRender7 = 0;
-		long tRender8 = 0;
-		long tRender9 = 0;
-		long tRender10 = 0;
-		long tRender11 = 0;
-		long tRender12 = 0;
-		long tDialog1;
-		long tDialog2 = 0;
-		long startTime = System.currentTimeMillis();
 		ClassLoader old = Thread.currentThread().getContextClassLoader();
 
 		Bindings bindings = getBindings(scriptContext);
@@ -131,24 +112,15 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingHttpServletRequest originalRequest = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
 		SlingHttpServletRequest request;
 
-		long tReq2 = System.currentTimeMillis() - startTime;
-
 		if (enableReverseMapping) {
-			tRev1 = System.currentTimeMillis();
 			ResourceResolver resolverHelper = ResourceResolverHelperFactory.create(originalRequest, mangleNameSpaces);
 			request = new ReactSlingHttpServletRequestWrapper(originalRequest, resolverHelper);
 			bindings.put(SlingBindings.REQUEST, request);
-			rRev2 = System.currentTimeMillis() - tRev1;
 		} else {
 			request = originalRequest;
 		}
-		long tResp1 = System.currentTimeMillis();
 		SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
-		long tResp2 = System.currentTimeMillis() - tResp1;
 		try {
-
-			tSel1 = System.currentTimeMillis();
-
 			Thread.currentThread().setContextClassLoader(((ReactScriptEngineFactory) getFactory()).getClassLoader());
 
 			List<String> rawSelectors = Arrays.asList(request.getRequestPathInfo().getSelectors());
@@ -164,12 +136,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			}
 			Resource resource = request.getResource();
 
-			tSel2 = System.currentTimeMillis() - tSel1;
-
 			try (ComponentMetrics metrics = metricsService.create(resource)) {
-
-				tDialog1 = System.currentTimeMillis();
-
 				SlingBindings slingBindings = (SlingBindings) request.getAttribute(SlingBindings.class.getName());
 				if (slingBindings == null) {
 					slingBindings = new SlingBindings();
@@ -185,10 +152,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					return null;
 				}
 
-				tDialog2 = System.currentTimeMillis() - tDialog1;
-
-				tRender3 = System.currentTimeMillis();
-
 				String renderedHtml;
 				boolean serverRendering = !SERVER_RENDERING_DISABLED
 						.equals(request.getParameter(SERVER_RENDERING_PARAM));
@@ -196,32 +159,23 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				String path = resource.getPath();
 				String mappedPath;
 
-				tRender4 = System.currentTimeMillis() - tRender3;
-
-				tRender5 = System.currentTimeMillis();
-
 				if (!disableMapping) {
 					mappedPath = request.getResourceResolver().map(request, path);
 					mappedPath = ResourceResolverUtils.getUriPath(mappedPath);
 				} else {
 					mappedPath = path;
 				}
-				tRender6 = System.currentTimeMillis() - tRender5;
 
 				if (serverRendering) {
-					tRender7 = System.currentTimeMillis();
 					final Object reactContext = request.getAttribute(REACT_CONTEXT_KEY);
 					RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), getWcmMode(request),
 							scriptContext, renderAsJson, reactContext, selectors);
 					renderedHtml = result.html;
 					cacheString = result.cache;
 					request.setAttribute(REACT_CONTEXT_KEY, result.reactContext);
-					tRender8 = System.currentTimeMillis() - tRender7;
-
 				} else if (renderAsJson) {
 					// development mode: return cache with just the current
 					// resource.
-					tRender9 = System.currentTimeMillis();
 					JSONObject cache = new JSONObject();
 					JSONObject resources = new JSONObject();
 					JSONObject resourceEntry = new JSONObject();
@@ -232,13 +186,10 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					cache.put("resources", resources);
 					cacheString = cache.toString();
 					renderedHtml = "";
-					tRender10 = System.currentTimeMillis() - tRender9;
 				} else {
 					// initial rendering in development mode
 					renderedHtml = "";
 				}
-
-				tRender11 = System.currentTimeMillis();
 
 				String output;
 				if (renderAsJson) {
@@ -251,8 +202,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				}
 
 				scriptContext.getWriter().write(output);
-				tRender12 = System.currentTimeMillis() - tRender11;
-
 				return null;
 			}
 
@@ -260,22 +209,19 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			throw new ScriptException(e);
 		} finally {
 			Thread.currentThread().setContextClassLoader(old);
-			long tComplete = System.currentTimeMillis() - startTime;
-			LOG.info("ReactScriptEngine.eval complete: " + tComplete + " (1:" + tReq2 + ", 2:" + rRev2 + ", 3:" + tResp2 + ", 4:" + tSel2 + ", 5:" + tDialog2 + ", 6:" + tRender2 + ", 7:" + tRender4 + ", 8:" + tRender6 + ", 9:" + tRender8 + ", 10:" + tRender10 + ", 11:" + tRender12 +  ", pool idle: " + this.enginePool.getNumIdle() +  ", pool active: " + this.enginePool.getNumActive() + ",thread: " + Thread.currentThread().getId() + ")");
 		}
-
 	}
 
 
 	/**
-	 * wrap the rendered react markup with the teaxtarea that contains the
-	 * component's props.
-	 *
-	 * @param path
-	 * @param reactProps
-	 * @param component
+	 * wrap the rendered react markup with the teaxtarea that contains the component's props.
+	 * @param mappedPath
+	 * @param resource
 	 * @param renderedHtml
 	 * @param serverRendering
+	 * @param wcmmode
+	 * @param cache
+	 * @param selectors
 	 * @return
 	 */
 	String wrapHtml(String mappedPath, Resource resource, String renderedHtml, boolean serverRendering, String wcmmode,
@@ -313,29 +259,26 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	/**
 	 * render the react markup
-	 *
-	 * @param reactProps
-	 *            props
-	 * @param component
-	 *            component name
+	 * @param mappedPath
+	 * @param resourceType
+	 * @param wcmmode
+	 * @param scriptContext
+	 * @param renderAsJson
+	 * @param reactContext
+	 * @param selectors
 	 * @return
 	 */
 	private RenderResult renderReactMarkup(String mappedPath, String resourceType, String wcmmode,
 			ScriptContext scriptContext, boolean renderAsJson, Object reactContext, List<String> selectors) {
-		long t0 = System.currentTimeMillis();
-		long t1 = 0;
-		long t2 = 0;
-		long t3 = 0;
+		long start = System.currentTimeMillis();
 		JavascriptEngine javascriptEngine;
 		boolean removeMapper = false;
 		try {
 			SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
 			ResourceMapper resourceMapper = new ResourceMapper(request);
 			removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
-			t1 = System.currentTimeMillis();
 			javascriptEngine = enginePool.borrowObject();
 			javascriptEngine.initialize();
-			t2 = System.currentTimeMillis();
 			try {
 				while (javascriptEngine.isScriptsChanged()) {
 					LOG.info("scripts changed -> invalidate engine");
@@ -367,8 +310,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			if (removeMapper) {
 				ResourceMapperLocator.clearInstance();
 			}
-			t3 = System.currentTimeMillis();
-			LOG.info("ReactScriptEngine.renderReactMarkup complete: " + (t3-t0) + " (1:" + (t1-t0) + ", 2:" + (t2-t1) + ", 3:" + (t3-t2) +  ",thread: " + Thread.currentThread().getId() + ")");
+			LOG.debug("ReactScriptEngine.renderReactMarkup took: " + (System.currentTimeMillis() - start) + "ms");
 		}
 
 	}

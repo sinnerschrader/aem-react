@@ -141,8 +141,7 @@ public class JavascriptEngine {
 	}
 
 	private void loadJavascriptLibrary() {
-		long t0 = System.currentTimeMillis();
-
+		long start = System.currentTimeMillis();
 		scriptChecksums = new HashMap<>();
 		Iterator<HashedScript> iterator = loader.iterator();
 		while (iterator.hasNext()) {
@@ -155,9 +154,7 @@ public class JavascriptEngine {
 				throw new TechnicalException("cannot eval library script", e);
 			}
 		}
-		long t1 = System.currentTimeMillis();
-		LOGGER.info("JavascriptEngine.loadJavascriptLibrary complete: " + (t1-t0) + "(t: " + Thread.currentThread().getId() + ")");
-
+		LOGGER.debug("JavascriptEngine.loadJavascriptLibrary took: " + (System.currentTimeMillis() - start) + "ms");
 	}
 
 	/**
@@ -190,11 +187,9 @@ public class JavascriptEngine {
 			result.cache = ((Map<String, Object>) value).get("state").toString();
 			result.reactContext = ((Map<String, Object>) value).get("reactContext");
 			long duration = System.currentTimeMillis() - startTime;
-			LOGGER.info("JavascriptEngine.render duration: " + duration + " (t: " + Thread.currentThread().getId() + ")");
+			LOGGER.debug("JavascriptEngine.render took: " + duration + "ms");
 			return result;
 		} catch (NoSuchMethodException | ScriptException e) {
-			long duration = System.currentTimeMillis() - startTime;
-			LOGGER.info("JavascriptEngine.render error duration: " + duration + " (t: " + Thread.currentThread().getId() + ")");
 			throw new TechnicalException("cannot render react on server", e);
 		}
 	}
