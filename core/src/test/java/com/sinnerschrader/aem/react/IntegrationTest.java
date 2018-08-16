@@ -72,6 +72,12 @@ public class IntegrationTest {
 	@Mock
 	private ModelFactory modelFactory;
 
+	@Rule
+	public SlingContext slingContext = new SlingContext();
+
+	@Mock
+	private RequestDispatcher dispatcher;
+
 	private ObjectMapper mapper = new ObjectMapper();
 
 	private ObjectNode getJsonFromTextArea(Element ta) throws IOException, JsonProcessingException {
@@ -89,12 +95,6 @@ public class IntegrationTest {
 		Elements es = doc.select("textarea");
 		return es.get(0);
 	}
-
-	@Rule
-	public SlingContext slingContext = new SlingContext();
-
-	@Mock
-	private RequestDispatcher dispatcher;
 
 	@Test
 	public void testRenderText() throws NoSuchElementException, IllegalStateException, Exception {
