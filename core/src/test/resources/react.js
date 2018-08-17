@@ -17,10 +17,10 @@ var AemGlobal = {
 			"wcmmode" : wcmmode,
 			"renderAsJson" : renderAsJson,
 			"selectors" : selectors,
-			"cqx": Cqx.doit()
+			"cqx": JSON.parse(Cqx.getRequestModel("x","x").getObject())
 		};
 		
-				var result = {
+		var result = {
 			html : "my html",
 			state : JSON.stringify(state),
 			reactContext : reactContext

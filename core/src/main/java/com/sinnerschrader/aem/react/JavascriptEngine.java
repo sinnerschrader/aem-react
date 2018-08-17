@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.script.Invocable;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -38,6 +37,7 @@ public class JavascriptEngine {
 	private ComponentMetricsService metricsService;
 	private boolean initialized = false;
 	private Object sling;
+	private CqxHolder cqxHolder;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -135,6 +135,8 @@ public class JavascriptEngine {
 		engine.getContext().setWriter(new Print());
 		engine.put("console", new Console());
 		engine.put("Sling", this.sling);
+		this.cqxHolder=new CqxHolder();
+		engine.put("Cqx", this.cqxHolder);
 		loadJavascriptLibrary();
 
 		this.initialized = true;
@@ -176,7 +178,8 @@ public class JavascriptEngine {
 
 		Invocable invocable = ((Invocable) engine);
 		try {
-			engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
+			// engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
+			this.cqxHolder.init(cqx);
 			Object AemGlobal = engine.get("AemGlobal");
 			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, String.valueOf(rootNo), wcmmode,
 					renderAsJson, selectors.toArray(new String[selectors.size()]));

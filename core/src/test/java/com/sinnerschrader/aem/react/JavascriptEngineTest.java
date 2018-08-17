@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
+import com.sinnerschrader.aem.react.api.JsProxy;
 import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
@@ -31,8 +32,8 @@ public class JavascriptEngineTest {
 			super(null, null, null, null, null);
 		}
 
-		public String doit() {
-			return CQX_RESPONSE;
+		public JsProxy getRequestModel(String path, String resourceType) {
+			return new JsProxy(CQX_RESPONSE, String.class, new ObjectMapper());
 		}
 	}
 
