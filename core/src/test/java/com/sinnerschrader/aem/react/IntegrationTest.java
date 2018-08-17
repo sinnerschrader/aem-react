@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Sling;
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.integration.TextProps;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
@@ -71,6 +72,8 @@ public class IntegrationTest {
 
 	@Mock
 	private ModelFactory modelFactory;
+
+	private ComponentCache mockCache = new ComponentCache(null, null, 0, 0, null, false);
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -203,7 +206,7 @@ public class IntegrationTest {
 				Mockito.any(SlingHttpServletResponse.class));
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		ScriptContext scriptContext = new SimpleScriptContext();
-		JavascriptEngine jsEngine = new JavascriptEngine(loader, new Sling(scriptContext));
+		JavascriptEngine jsEngine = new JavascriptEngine(loader, new Sling(scriptContext), mockCache);
 		jsEngine.initialize();
 
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",

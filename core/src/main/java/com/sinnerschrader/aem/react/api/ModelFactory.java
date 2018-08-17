@@ -1,5 +1,8 @@
 package com.sinnerschrader.aem.react.api;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterManager;
@@ -12,6 +15,8 @@ import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
 
@@ -153,6 +158,12 @@ public class ModelFactory {
 	 */
 	public JsProxy createRequestModel(String path, String className) {
 
+		SlingHttpServletRequestWrapper newRequest = createReuest(path);
+
+		return createModel(className, newRequest);
+	}
+
+	private SlingHttpServletRequestWrapper createReuest(String path) {
 		final Resource currentResource = getResource(path);
 		SlingBindings originalBindings = (SlingBindings) request.getAttribute(SlingBindings.class.getName());
 		SlingBindings bindings = new SlingBindings();
@@ -169,8 +180,7 @@ public class ModelFactory {
 			bindings.setSling(originalBindings.getSling());
 
 		}
-
-		return createModel(className, newRequest);
+		return newRequest;
 	}
 
 	/**
@@ -205,6 +215,15 @@ public class ModelFactory {
 			}
 			return new JsProxy(object, clazz, mapper);
 		});
+	}
+
+	public String createModel(String path) throws JsonGenerationException, JsonMappingException, IOException {
+		SlingHttpServletRequest newRequest = this.createReuest(path);
+		Object model = modelFactory.getModelFromRequest(newRequest);
+		StringWriter stringWriter = new StringWriter();
+		mapper.writeValue(stringWriter, model);
+		return stringWriter.toString();
+
 	}
 
 }

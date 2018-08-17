@@ -1,6 +1,10 @@
 package com.sinnerschrader.aem.react.api;
 
+import java.io.IOException;
+
 import com.adobe.granite.xss.XSSAPI;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -37,6 +41,21 @@ public class Cqx {
 	public JsProxy getOsgiService(String name) {
 		return finder.get(name, mapper);
 	}
+
+	/**
+	 * get a request sling model
+	 *
+	 * @param name
+	 *            fully qualified class name
+	 * @return
+	 * @throws IOException
+	 * @throws JsonMappingException
+	 * @throws JsonGenerationException
+	 */
+	public String getModel(String path) throws JsonGenerationException, JsonMappingException, IOException {
+		return modelFactory.createModel(path);
+	}
+
 
 	/**
 	 * get a request sling model

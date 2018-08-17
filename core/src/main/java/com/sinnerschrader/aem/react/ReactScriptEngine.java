@@ -48,7 +48,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	private static final String JSON_RENDER_SELECTOR = "json";
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
-	private static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
+	public static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
 
 	private static final String CURRENT_COMPONENT_ID_KEY = ReactScriptEngine.class.getName() + "_CURRENT_COMPONENT_ID";
 
@@ -168,16 +168,16 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				}
 
 				if (serverRendering) {
-                    final String reactContext = (String) request.getAttribute(REACT_CONTEXT_KEY);
-                    Integer rootNo = (Integer) request.getAttribute(REACT_ROOT_NO_KEY);
-                    if (rootNo == null) {
-                        rootNo = 1;
-                    } else {
-                        rootNo = rootNo + 1;
-                    }
-                    request.setAttribute(REACT_ROOT_NO_KEY, rootNo);
-                    RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), rootNo,
-                            getWcmMode(request), scriptContext, renderAsJson, reactContext, selectors);
+					final String reactContext = (String) request.getAttribute(REACT_CONTEXT_KEY);
+					Integer rootNo = (Integer) request.getAttribute(REACT_ROOT_NO_KEY);
+					if (rootNo == null) {
+						rootNo = 1;
+					} else {
+						rootNo = rootNo + 1;
+					}
+					request.setAttribute(REACT_ROOT_NO_KEY, rootNo);
+					RenderResult result = renderReactMarkup(mappedPath, resource.getResourceType(), rootNo,
+							getWcmMode(request), scriptContext, renderAsJson, reactContext, selectors);
 					renderedHtml = result.html;
 					cacheString = result.cache;
 				} else if (renderAsJson) {
@@ -220,7 +220,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	}
 
 	/**
-	 * wrap the rendered react markup with the teaxtarea that contains the component's props.
+	 * wrap the rendered react markup with the teaxtarea that contains the
+	 * component's props.
+	 *
 	 * @param mappedPath
 	 * @param resource
 	 * @param renderedHtml
@@ -265,6 +267,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	/**
 	 * render the react markup
+	 *
 	 * @param mappedPath
 	 * @param resourceType
 	 * @param wcmmode
@@ -276,7 +279,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 */
 	private RenderResult renderReactMarkup(String mappedPath, String resourceType, int rootNo, String wcmmode,
 			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors) {
-        long start = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
 		JavascriptEngine javascriptEngine;
 		boolean removeMapper = false;
 		try {
@@ -291,8 +294,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					enginePool.invalidateObject(javascriptEngine);
 					javascriptEngine = enginePool.borrowObject();
 				}
-				return javascriptEngine.render(mappedPath, resourceType, rootNo, wcmmode, createCqx(scriptContext),
-						renderAsJson, selectors);
+				return javascriptEngine.render(request, mappedPath, resourceType, rootNo, wcmmode,
+						createCqx(scriptContext), renderAsJson, selectors);
 			} finally {
 
 				try {
@@ -316,7 +319,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			if (removeMapper) {
 				ResourceMapperLocator.clearInstance();
 			}
-			LOG.debug("ReactScriptEngine.renderReactMarkup took: " + (System.currentTimeMillis() - start) + "ms");
+			// LOG.debug("ReactScriptEngine.renderReactMarkup took: " +
+			// (System.currentTimeMillis() - start) + "ms");
 		}
 
 	}

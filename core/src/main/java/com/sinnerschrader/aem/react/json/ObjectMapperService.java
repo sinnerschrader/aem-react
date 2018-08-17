@@ -14,6 +14,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.sinnerschrader.aem.react.ReactScriptEngineFactory;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.reactapi.json.JsonService;
@@ -29,6 +30,7 @@ public class ObjectMapperService implements JsonService {
 	public static final String JSON_RESOURCEMAPPING_INCLUDE_PATTERN = "json.resourcemapping.include.pattern";
 	public static final String JSON_RESOURCEMAPPING_EXCLUDE_PATTERN = "json.resourcemapping.exclude.pattern";
 	private ObjectMapper objectMapper;
+	private ObjectWriter objectWriter;
 
 	@Activate
 	public void activate(final ComponentContext context, Map<String, Object> properties) {
@@ -37,6 +39,7 @@ public class ObjectMapperService implements JsonService {
 		String excludePattern = PropertiesUtil
 				.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
 		this.objectMapper = new ObjectMapperFactory().create(includePattern, excludePattern);
+		this.objectWriter = objectMapper.writerWithView(Object.class);
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class ObjectMapperService implements JsonService {
 		boolean remove = false;
 		try {
 			remove = ResourceMapperLocator.setInstance(request);
-			objectMapper.writeValue(writer, value);
+			objectWriter.writeValue(writer, value);
 		} catch (IOException e) {
 			throw new TechnicalException("cannot convert object to json", e);
 		} finally {
