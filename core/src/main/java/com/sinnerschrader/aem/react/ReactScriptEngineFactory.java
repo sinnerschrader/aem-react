@@ -38,8 +38,11 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ObjectMapperFactory;
 import com.sinnerschrader.aem.react.loader.HashedScript;
@@ -48,6 +51,7 @@ import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.loader.ScriptLoader;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
+import com.sinnerschrader.aem.reactapi.json.CacheView;
 
 @Component(label = "ReactJs Script Engine Factory", metatype = true)
 @Service(ScriptEngineFactory.class)
@@ -57,6 +61,9 @@ import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "total javascript engine pool size", longValue = 5), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_SIZE, label = "component cache max size", longValue = 2000), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_MINUTES, label = "component cache max minutes", longValue = 10), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue=false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name", value = "div"), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_CLASS_NAME, label = "the root element class name", value = ""), //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resolver", value = "^/content"), //
@@ -73,6 +80,9 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
 	public static final String PROPERTY_POOL_TOTAL_SIZE = "pool.total.size";
 	public static final String PROPERTY_POOL_MIN_SIZE = "pool.min.size";
+	public static final String PROPERTY_CACHE_MAX_SIZE = "cache.max.size";
+	public static final String PROPERTY_CACHE_DEBUG = "cache.debug";
+	public static final String PROPERTY_CACHE_MAX_MINUTES = "cache.max.minutes";
 	public static final String PROPERTY_ROOT_ELEMENT_NAME = "root.element.name";
 	public static final String PROPERTY_ROOT_CLASS_NAME = "root.element.class.name";
 	public static final String PROPERTY_ENABLE_REVERSE_MAPPING = "mapping.reverse.enable";
@@ -193,6 +203,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		scriptResources = PropertiesUtil.toStringArray(context.getProperties().get(PROPERTY_SCRIPTS_PATHS),
 				new String[0]);
 		int poolTotalSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TOTAL_SIZE), 20);
+		int maxSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_SIZE), 0);
+		int maxMinutes = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_MINUTES), 10);
 		String rootElementName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_ELEMENT_NAME),
 				"div");
 		String rootElementClassName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_CLASS_NAME),
@@ -200,10 +212,10 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		boolean mangleNameSpaces = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MANGLE_NAMESPACES),
 				true);
 		this.disableMapping = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MAPPING_DISABLE), false);
+		boolean debugCache = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_CACHE_DEBUG), false);
 		this.enableReverseMapping = !disableMapping
 				&& PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_ENABLE_REVERSE_MAPPING), false);
 		ScriptCollectionLoader loader = createLoader(scriptResources);
-		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null);
 
 		String includePattern = disableMapping ? null
 				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_INCLUDE_PATTERN),
@@ -212,13 +224,16 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
 
 		ObjectMapper mapper = new ObjectMapperFactory().create(includePattern, excludePattern);
+		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern).enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
 
+		ComponentCache cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
+		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null, cache);
 		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, javacriptEnginePoolFactory);
 		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
-				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping, disableMapping,
-				mangleNameSpaces);
+				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
+				disableMapping, mangleNameSpaces);
 		try {
-			initialized=false;
+			initialized = false;
 			initializeScripts();
 			int minEngineCount = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_MIN_SIZE), 5);
 			initializeEngines(pool, minEngineCount);
@@ -256,7 +271,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	@Deactivate
 	public void stop() throws RepositoryException {
-		initialized=false;
+		initialized = false;
 		this.engine.stop();
 		this.listener.deactivate();
 	}
@@ -306,14 +321,14 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	private void initializeEngines(ObjectPool<JavascriptEngine> pool, int minEngineCount) {
 		try {
 			JavascriptEngine[] engines = new JavascriptEngine[minEngineCount];
-			for (int i=minEngineCount; i > 0; --i) {
+			for (int i = minEngineCount; i > 0; --i) {
 				JavascriptEngine engine = pool.borrowObject();
 				engine.initialize();
-				engines[i-1] = engine;
+				engines[i - 1] = engine;
 			}
 
-			for (int i=minEngineCount; i > 0; --i) {
-				pool.returnObject(engines[i-1]);
+			for (int i = minEngineCount; i > 0; --i) {
+				pool.returnObject(engines[i - 1]);
 			}
 
 			LOG.info(pool.getNumActive() + pool.getNumIdle() + " engines initialized");

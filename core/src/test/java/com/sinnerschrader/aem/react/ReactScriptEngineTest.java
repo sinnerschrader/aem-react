@@ -11,6 +11,7 @@ import javax.script.ScriptContext;
 import javax.script.SimpleScriptContext;
 
 import org.apache.commons.pool2.ObjectPool;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -110,10 +111,9 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -155,10 +155,9 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -194,10 +193,9 @@ public class ReactScriptEngineTest {
 
 		slingContext.request().setQueryString("serverRendering=disabled");
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(false),  Matchers.eq(new ArrayList<>())))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -252,14 +250,13 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(true),  Matchers.eq(new ArrayList() {
-							{
-								add("json");
-							}
-						})))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(true), Matchers.eq(new ArrayList() {
+					{
+						add("json");
+					}
+				}))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -284,14 +281,13 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(true),  Matchers.eq(new ArrayList() {
-							{
-								add("json");
-							}
-						})))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(true), Matchers.eq(new ArrayList() {
+					{
+						add("json");
+					}
+				}))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -315,10 +311,9 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(
-				engine.render(Matchers.eq(path), Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"),
-						Mockito.anyObject(), Matchers.eq(false), Matchers.eq(new ArrayList<>())))
-				.thenReturn(result);
+		Mockito.when(engine.render(Matchers.any(SlingHttpServletRequest.class), Matchers.eq(path),
+				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
+				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();

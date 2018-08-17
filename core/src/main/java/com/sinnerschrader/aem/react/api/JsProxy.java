@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  *
@@ -31,11 +32,11 @@ public class JsProxy {
 
 	private Map<String, Method> methods = new HashMap<>();
 
-	private ObjectMapper mapper;
+	private ObjectWriter writer;
 
 	public JsProxy(Object target, Class<?> clazz, ObjectMapper mapper) {
 		super();
-		this.mapper = mapper;
+		this.writer = mapper.writerWithView(Object.class);
 		this.target = target;
 		for (Method m : clazz.getMethods()) {
 			methods.put(m.getName(), m);
@@ -82,7 +83,7 @@ public class JsProxy {
 
 	private String writeValue(Object returnValue) throws IOException, JsonGenerationException, JsonMappingException {
 		StringWriter stringWriter = new StringWriter();
-		mapper.writeValue(stringWriter, returnValue);
+		writer.writeValue(stringWriter, returnValue);
 		return stringWriter.toString();
 	}
 
@@ -94,7 +95,7 @@ public class JsProxy {
 	public String getObject() throws Exception {
 		try {
 			StringWriter stringWriter = new StringWriter();
-			mapper.writeValue(stringWriter, target);
+			writer.writeValue(stringWriter, target);
 			return stringWriter.toString();
 		} catch (Exception e) {
 			LOGGER.error("cannot serialize object", e);

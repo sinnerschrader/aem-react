@@ -15,6 +15,9 @@
     <packaging>bundle</packaging>
     <name>website - API</name>
     <description>Api for react projects</description>
+    <properties>
+        <installPath>/apps/vw-ngw_complete/install</installPath>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -41,6 +44,32 @@
     </build>
    
 
+    <profiles>
+
+        <!-- Development profile: install only the bundle -->
+        <profile>
+            <id>autoInstallBundle</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-sling-plugin</artifactId>
+                        <configuration>
+                            <!-- Note that this requires /apps/react-demo/install to exist!! -->
+                            <!-- This is typically the case when ui.apps is deployed first -->
+                            <!-- Otherwise, create /apps/react-demo/install manually (CRXDE|Lite) -->
+                            <slingUrlSuffix>${installPath}</slingUrlSuffix>
+                            <failOnError>true</failOnError>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

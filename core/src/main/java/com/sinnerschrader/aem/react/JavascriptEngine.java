@@ -12,15 +12,17 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
+import com.sinnerschrader.aem.react.cache.CacheKey;
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
-import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
 
 /**
@@ -34,10 +36,10 @@ public class JavascriptEngine {
 	private ScriptCollectionLoader loader;
 	private ScriptEngine engine;
 	private Map<String, String> scriptChecksums;
-	private ComponentMetricsService metricsService;
 	private boolean initialized = false;
 	private Object sling;
 	private CqxHolder cqxHolder;
+	private ComponentCache cache;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -114,9 +116,10 @@ public class JavascriptEngine {
 		}
 	}
 
-	public JavascriptEngine(ScriptCollectionLoader loader, Object sling) {
+	public JavascriptEngine(ScriptCollectionLoader loader, Object sling, ComponentCache cache) {
 		this.loader = loader;
 		this.sling = sling;
+		this.cache = cache;
 	}
 
 	/**
@@ -125,7 +128,7 @@ public class JavascriptEngine {
 	 *
 	 */
 	public void initialize() {
-		if(this.initialized) {
+		if (this.initialized) {
 			return;
 		}
 
@@ -135,7 +138,7 @@ public class JavascriptEngine {
 		engine.getContext().setWriter(new Print());
 		engine.put("console", new Console());
 		engine.put("Sling", this.sling);
-		this.cqxHolder=new CqxHolder();
+		this.cqxHolder = new CqxHolder();
 		engine.put("Cqx", this.cqxHolder);
 		loadJavascriptLibrary();
 
@@ -169,31 +172,35 @@ public class JavascriptEngine {
 	 *            API object for current request
 	 * @return
 	 */
-	public RenderResult render(String path, String resourceType, int rootNo, String wcmmode, Cqx cqx, boolean renderAsJson, List<String> selectors) {
+	public RenderResult render(SlingHttpServletRequest request, String path, String resourceType, int rootNo,
+			String wcmmode, Cqx cqx, boolean renderAsJson, List<String> selectors) {
 		long startTime = System.currentTimeMillis();
 
-		if(!this.initialized) {
+		if (!this.initialized) {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
 		}
 
-		Invocable invocable = ((Invocable) engine);
-		try {
-			// engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
-			this.cqxHolder.init(cqx);
-			Object AemGlobal = engine.get("AemGlobal");
-			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, String.valueOf(rootNo), wcmmode,
-					renderAsJson, selectors.toArray(new String[selectors.size()]));
 
-			RenderResult result = new RenderResult();
-			result.html = (String) ((Map<String, Object>) value).get("html");
-			result.cache = ((Map<String, Object>) value).get("state").toString();
-			// result.reactContext = (String) ((Map<String, Object>) value).get("reactContext");
-			long duration = System.currentTimeMillis() - startTime;
-			LOGGER.debug("JavascriptEngine.render took: " + duration + "ms");
-			return result;
-		} catch (NoSuchMethodException | ScriptException e) {
-			throw new TechnicalException("cannot render react on server", e);
-		}
+		return cache.cache(new CacheKey(path, resourceType, wcmmode, renderAsJson, selectors), request, path,
+				resourceType, () -> {
+					Invocable invocable = ((Invocable) engine);
+					try {
+						this.cqxHolder.init(cqx);
+						Object AemGlobal = engine.get("AemGlobal");
+						Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType,
+								String.valueOf(rootNo), wcmmode, renderAsJson,
+								selectors.toArray(new String[selectors.size()]));
+
+						RenderResult result = new RenderResult();
+						result.html = (String) ((Map<String, Object>) value).get("html");
+						result.cache = ((Map<String, Object>) value).get("state").toString();
+
+						return result;
+					} catch (NoSuchMethodException | ScriptException e) {
+						throw new TechnicalException("cannot render react on server", e);
+					}
+				});
+
 	}
 
 	public ScriptEngine getEngine() {

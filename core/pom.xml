@@ -16,7 +16,7 @@
     <name>website - Core</name>
     <description>Core bundle for website</description>
     <properties>
-        <installPath>/apps/react-demo/install</installPath>
+        <installPath>/apps/vw-ngw_complete/install</installPath>
     </properties>
     <build>
         <plugins>
@@ -45,7 +45,8 @@
                             antlr4-runtime,
                             rhino,
                             jsoup,
-                            metrics-core
+                            metrics-core,
+                            caffeine
                         </Embed-Dependency>
                         <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>
                         <Import-Package>
@@ -57,6 +58,7 @@
                             org.apache.sling.models.factory;version=!,
                             org.apache.sling.scripting.api;version=!,
                             com.day.cq.wcm.api;version=!,
+                            !sun.misc,
                             com.day.cq.wcm.api.components;version=!,
                             *
                         </Import-Package>
@@ -227,6 +229,11 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.6.2</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

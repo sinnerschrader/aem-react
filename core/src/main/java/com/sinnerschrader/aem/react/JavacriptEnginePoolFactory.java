@@ -3,9 +3,8 @@ package com.sinnerschrader.aem.react;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 
 /**
@@ -21,15 +20,17 @@ public class JavacriptEnginePoolFactory extends BasePooledObjectFactory<Javascri
 
 	private ScriptCollectionLoader loader;
 	private Object sling;
+	private ComponentCache cache;
 
-	public JavacriptEnginePoolFactory(ScriptCollectionLoader loader, Object sling) {
+	public JavacriptEnginePoolFactory(ScriptCollectionLoader loader, Object sling, ComponentCache cache) {
 		this.loader = loader;
 		this.sling = sling;
+		this.cache =cache;
 	}
 
 	@Override
 	public JavascriptEngine create() throws Exception {
-		return new JavascriptEngine(loader, sling);
+		return new JavascriptEngine(loader, sling, cache);
 	}
 
 	@Override

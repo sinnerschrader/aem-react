@@ -1,6 +1,10 @@
 package com.sinnerschrader.aem.react;
 
+import java.io.IOException;
+
 import com.adobe.granite.xss.XSSAPI;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.api.JsProxy;
 import com.sinnerschrader.aem.react.api.Sling;
@@ -22,6 +26,10 @@ public class CqxHolder {
 	 */
 	public JsProxy getRequestModel(String path, String name) {
 		return cqx.getRequestModel(path, name);
+	}
+
+	public String getModel(String path) throws JsonGenerationException, JsonMappingException, IOException {
+		return cqx.getModel(path);
 	}
 
 	/**

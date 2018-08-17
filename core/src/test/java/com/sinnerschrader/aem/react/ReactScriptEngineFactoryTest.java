@@ -25,7 +25,6 @@ import org.osgi.service.component.ComponentContext;
 
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.loader.ScriptLoader;
-import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 import com.sinnerschrader.aem.react.repo.RepositoryConnection;
 import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 
@@ -62,9 +61,6 @@ public class ReactScriptEngineFactoryTest {
 
 	@Mock
 	private AdapterManager adapterManager;
-
-	@Mock
-	private ComponentMetricsService metricsService;
 
 	@Mock
 	private ComponentContext componentContext;

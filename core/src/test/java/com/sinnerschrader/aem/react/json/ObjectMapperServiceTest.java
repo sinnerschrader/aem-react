@@ -11,6 +11,9 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.service.component.ComponentContext;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sinnerschrader.aem.reactapi.json.CacheView;
+
 import junit.framework.Assert;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -27,10 +30,16 @@ public class ObjectMapperServiceTest {
 		public String getContent() {
 			return content;
 		}
+
+		@JsonView(CacheView.class)
+		public String getCacheProp() {
+			return "only for caching";
+		}
 	}
 
 	@Mock
 	private ComponentContext ctx;
+
 
 	@Test
 	public void testActivate() {
