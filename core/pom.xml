@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.sinnerschrader.aem.react</groupId>
         <artifactId>aem-react</artifactId>
-        <version>0.24.3-SNAPSHOT</version>
+        <version>2017.3.21i-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>core</artifactId>
@@ -47,7 +47,9 @@
                             jsoup,
                             metrics-core
                         </Embed-Dependency>
-                        <Export-Package>com.sinnerschrader.aem.react.*</Export-Package>
+                        <Export-Package>
+                            com.sinnerschrader.aem.react.*,
+                        </Export-Package>
                         <Import-Package>
                             org.apache.sling.api.resource;version=!,
                             org.apache.sling.api.scripting;version=!,
@@ -58,6 +60,7 @@
                             org.apache.sling.scripting.api;version=!,
                             com.day.cq.wcm.api;version=!,
                             com.day.cq.wcm.api.components;version=!,
+                            !jdk.nashorn.api.*,
                             *
                         </Import-Package>
                         <Sling-Model-Packages />

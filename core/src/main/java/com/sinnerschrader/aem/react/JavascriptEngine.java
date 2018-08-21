@@ -119,8 +119,8 @@ public class JavascriptEngine {
 	 * javascript files. Instances of this class are not thread-safe.
 	 *
 	 */
-	public void initialize() {
-		if(this.initialized) {
+	public synchronized void initialize(boolean forceInitialization) {
+		if(this.initialized && !forceInitialization) {
 			return;
 		}
 
@@ -170,19 +170,8 @@ public class JavascriptEngine {
 		}
 
 		try {
-			//scriptObject.put("Cqx", cqx);
-			//scriptObject.setMember("Cqx", cqx);
-
-
-
-            System.out.println(scriptObject.getClassName() + ": " + Arrays.toString(scriptObject.getOwnKeys(true)));
-
             Object value = scriptObject.callMember("renderReactComponent", path, resourceType, wcmmode,
                     renderAsJson, null, selectors.toArray(new String[selectors.size()]), cqx);
-
-			/*Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, wcmmode,
-					renderAsJson, /*reactContext*/
-			/*null, selectors.toArray(new String[selectors.size()]));*/
 
 			RenderResult result = new RenderResult();
 			result.html = (String) ((Map<String, Object>) value).get("html");

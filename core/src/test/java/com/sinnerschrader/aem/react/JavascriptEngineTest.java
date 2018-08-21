@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -49,7 +50,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize();
+		engine.initialize(true);
 
 		// check that only the checksum is relevant
 		scripts.clear();
@@ -66,7 +67,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize();
+		engine.initialize(true);
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -83,7 +84,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize();
+		engine.initialize(true);
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -98,7 +99,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize();
+		engine.initialize(true);
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -120,6 +121,7 @@ public class JavascriptEngineTest {
 	}
 
 	@Test
+    @Ignore
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
@@ -128,7 +130,7 @@ public class JavascriptEngineTest {
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		engine.initialize();
+		engine.initialize(true);
 
 		List<String> selectors = Collections.singletonList("s1");
 		Object reactContext = new Object();

@@ -8,7 +8,7 @@
     <groupId>com.sinnerschrader.aem.react</groupId>
     <artifactId>aem-react</artifactId>
     <packaging>pom</packaging>
-    <version>0.24.3-SNAPSHOT</version>
+    <version>2017.3.21i-SNAPSHOT</version>
     <name>aem react</name>
     <description>aem react library and demo</description>
     <url>www.github.com/sinnerschrader/aem-react</url>
@@ -28,8 +28,6 @@
         <module>aem-react-api</module>
         <module>core</module>
         <module>generate-typescript-maven-plugin</module>
-        <module>democore</module>
-        <module>demo</module>
     </modules>
 
     <scm>

@@ -7,7 +7,7 @@ import {ServerSling} from "aem-react-js/lib/store/ServerSling";
 
 //declare var Cqx: any;
 declare var AemGlobal: any;
-console.log("initializing mirror");
+console.log("initializing server.tsx");
 
 let rootComponentRegistry: RootComponentRegistry = new RootComponentRegistry();
 rootComponentRegistry.add(componentRegistry);
@@ -22,8 +22,6 @@ export function renderReactComponent(path: string, resourceType: string, wcmmode
     const selectors: string[] = Java.from(javaSelectors);
 
     const cache: Cache = new Cache();
-    //const javaSling = Cqx.sling;
-    console.log(JSON.stringify("foo"));
     const javaSling = cqx.sling;
     const serverSling = new ServerSling(cache, javaSling);
     const container: Container = new Container(cache, serverSling, cqx);

@@ -14,7 +14,6 @@ import javax.script.SimpleScriptContext;
 import javax.servlet.RequestDispatcher;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.pool2.ObjectPool;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -62,9 +61,6 @@ public class IntegrationTest {
 
 	@Mock
 	private MockRequestDispatcherFactory requestDispatcherFactory;
-
-	@Mock
-	private ObjectPool<JavascriptEngine> enginePool;
 
 	@Mock
 	private SlingScriptHelper sling;
@@ -204,9 +200,9 @@ public class IntegrationTest {
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		ScriptContext scriptContext = new SimpleScriptContext();
 		JavascriptEngine jsEngine = new JavascriptEngine(loader, new Sling(scriptContext));
-		jsEngine.initialize();
+		jsEngine.initialize(true);
 
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
+		ReactScriptEngine r = new ReactScriptEngine(factory, jsEngine, null, dynamicClassLoaderManager, "span",
 				"test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false);
 		ClassLoader classLoader = this.getClass().getClassLoader();
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
@@ -216,8 +212,6 @@ public class IntegrationTest {
 		bindings.put(SlingBindings.REQUEST, slingContext.request());
 		bindings.put(SlingBindings.RESPONSE, slingContext.response());
 		bindings.put(SlingBindings.SLING, sling);
-
-		Mockito.when(enginePool.borrowObject()).thenReturn(jsEngine);
 
 		StringWriter writer = new StringWriter();
 		scriptContext.setWriter(writer);

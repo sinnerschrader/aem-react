@@ -1,13 +1,13 @@
 package com.sinnerschrader.aem.react;
 
 import java.io.StringReader;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.*;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.observation.ObservationManager;
 
+import com.sinnerschrader.aem.react.loader.HashedScript;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -61,6 +61,9 @@ public class ReactScriptEngineFactoryTest {
 	private ScriptLoader scriptLoader;
 
 	@Mock
+	private List<HashedScript> scripts;
+
+	@Mock
 	private AdapterManager adapterManager;
 
 	@Mock
@@ -79,16 +82,19 @@ public class ReactScriptEngineFactoryTest {
 
 	@Test
 	public void test() throws UnsupportedRepositoryOperationException, RepositoryException {
-
 		createProperties();
 		factory.initialize(componentContext, null);
 	}
 
 	private void createProperties() throws UnsupportedRepositoryOperationException, RepositoryException {
 		Dictionary<String, Object> properties = new Hashtable<>();
-		properties.put(ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, new String[] { "/scripts/test.js" });
+		String[] scripts = new String[] { "/scripts/test.js" };
+		List<HashedScript> hashedList = new LinkedList<>();
+		hashedList.add(new HashedScript("1", "function hello() { console.log('hi'); }", "1"));
+		properties.put(ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, scripts);
 		Mockito.when(componentContext.getProperties()).thenReturn(properties);
 		Mockito.when(scriptLoader.loadJcrScript("/scripts/test.js", "")).thenReturn(new StringReader(""));
+		Mockito.when(this.scripts.iterator()).thenReturn(hashedList.iterator());
 		Mockito.when(repositoryConnectionFactory.getConnection("")).thenReturn(repositoryConnection);
 		Mockito.when(repositoryConnection.getObservationManager()).thenReturn(observationManager);
 	}
