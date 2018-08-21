@@ -5,9 +5,9 @@ import {Container} from "aem-react-js/lib/di/Container";
 import {Cache} from "aem-react-js/lib/store/Cache";
 import {ServerSling} from "aem-react-js/lib/store/ServerSling";
 
-declare var Cqx: any;
+//declare var Cqx: any;
 declare var AemGlobal: any;
-console.log("initializing AemGlobal");
+console.log("initializing mirror");
 
 let rootComponentRegistry: RootComponentRegistry = new RootComponentRegistry();
 rootComponentRegistry.add(componentRegistry);
@@ -17,14 +17,16 @@ AemGlobal.registry = rootComponentRegistry;
 /*tslint:disable-next-line*/
 declare var Java: any;
 
-AemGlobal.renderReactComponent = function (path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
-                                           reactContext: ReactContext, javaSelectors: object): any {
+export function renderReactComponent(path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
+                                           reactContext: ReactContext, javaSelectors: object, cqx: any): any {
     const selectors: string[] = Java.from(javaSelectors);
 
     const cache: Cache = new Cache();
-    const javaSling = Cqx.sling;
+    //const javaSling = Cqx.sling;
+    console.log(JSON.stringify("foo"));
+    const javaSling = cqx.sling;
     const serverSling = new ServerSling(cache, javaSling);
-    const container: Container = new Container(cache, serverSling, Cqx);
+    const container: Container = new Container(cache, serverSling, cqx);
     container.setService("javaSling", javaSling);
     container.setService("sling", serverSling);
     container.setService("cache", cache);

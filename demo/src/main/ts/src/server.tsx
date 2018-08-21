@@ -14,6 +14,7 @@ declare var Cqx: any;
 declare var AemGlobal: any;
 declare var Java: any;
 console.log("initializing AemGlobal");
+console.log("###### DEBUG ######");
 // AemGlobal = {};
 
 let rootComponentRegistry: RootComponentRegistry = new RootComponentRegistry();

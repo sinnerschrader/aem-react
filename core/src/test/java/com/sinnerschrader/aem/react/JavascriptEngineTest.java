@@ -3,6 +3,7 @@ package com.sinnerschrader.aem.react;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -129,11 +130,7 @@ public class JavascriptEngineTest {
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
 		engine.initialize();
 
-		List<String> selectors = new ArrayList() {
-			{
-				this.add("s1");
-			}
-		};
+		List<String> selectors = Collections.singletonList("s1");
 		Object reactContext = new Object();
 		RenderResult result = engine.render("/content", "/apps/test", "disabled", new MockCqx(), false, reactContext,
 				selectors);

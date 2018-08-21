@@ -1,21 +1,5 @@
 package com.sinnerschrader.aem.react;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
@@ -23,6 +7,16 @@ import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 /**
  *
@@ -38,6 +32,7 @@ public class JavascriptEngine {
 	private ComponentMetricsService metricsService;
 	private boolean initialized = false;
 	private Object sling;
+	private ScriptObjectMirror scriptObject;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -147,9 +142,8 @@ public class JavascriptEngine {
 		while (iterator.hasNext()) {
 			try {
 				HashedScript next = iterator.next();
-				engine.eval(next.getScript());
-				scriptChecksums.put(next.getId(), next.getChecksum());
-
+                scriptObject = (ScriptObjectMirror)engine.eval(next.getScript());
+                scriptChecksums.put(next.getId(), next.getChecksum());
 			} catch (ScriptException e) {
 				throw new TechnicalException("cannot eval library script", e);
 			}
@@ -175,21 +169,29 @@ public class JavascriptEngine {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
 		}
 
-		Invocable invocable = ((Invocable) engine);
 		try {
-			engine.getBindings(ScriptContext.ENGINE_SCOPE).put("Cqx", cqx);
-			Object AemGlobal = engine.get("AemGlobal");
-			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, wcmmode,
-					renderAsJson, /*reactContext*/ null, selectors.toArray(new String[selectors.size()]));
+			//scriptObject.put("Cqx", cqx);
+			//scriptObject.setMember("Cqx", cqx);
+
+
+
+            System.out.println(scriptObject.getClassName() + ": " + Arrays.toString(scriptObject.getOwnKeys(true)));
+
+            Object value = scriptObject.callMember("renderReactComponent", path, resourceType, wcmmode,
+                    renderAsJson, null, selectors.toArray(new String[selectors.size()]), cqx);
+
+			/*Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType, wcmmode,
+					renderAsJson, /*reactContext*/
+			/*null, selectors.toArray(new String[selectors.size()]));*/
 
 			RenderResult result = new RenderResult();
 			result.html = (String) ((Map<String, Object>) value).get("html");
 			result.cache = ((Map<String, Object>) value).get("state").toString();
 			result.reactContext = ((Map<String, Object>) value).get("reactContext");
-			long duration = System.currentTimeMillis() - startTime;
-			LOGGER.debug("JavascriptEngine.render took: " + duration + "ms");
+			LOGGER.debug("JavascriptEngine.render took: " + (System.currentTimeMillis() - startTime) + "ms");
 			return result;
-		} catch (NoSuchMethodException | ScriptException e) {
+		} catch (Exception e) {
+			LOGGER.error("error", e);
 			throw new TechnicalException("cannot render react on server", e);
 		}
 	}

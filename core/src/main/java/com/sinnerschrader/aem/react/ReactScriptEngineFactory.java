@@ -56,7 +56,7 @@ import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "total javascript engine pool size", longValue = 5), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "number of javascript engines to create at start up", longValue = 5), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name", value = "div"), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_CLASS_NAME, label = "the root element class name", value = ""), //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resolver", value = "^/content"), //
