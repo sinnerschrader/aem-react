@@ -49,7 +49,7 @@ public class ComponentCache {
 			ComponentMetricsService metricsService, boolean debug) {
 		super();
 		this.debug = debug;
-		if (metricsService != null && metricsService.getRegistry()!=null) {
+		if (metricsService != null && metricsService.getRegistry() != null) {
 			this.cacheHitCounter = metricsService.getRegistry().counter("react.cache.hit");
 			this.cacheTotalCounter = metricsService.getRegistry().counter("react.cache.total");
 			metricsService.getRegistry().gauge("react.cache.hitrate", new MetricSupplier<Gauge>() {
@@ -72,17 +72,17 @@ public class ComponentCache {
 			caching = true;
 			this.modelFactory = modelFactory;
 			this.mapper = mapper;
-			 Caffeine<Object, Object> builder = Caffeine.newBuilder()//
+			Caffeine<Object, Object> builder = Caffeine.newBuilder()//
 					.expireAfterWrite(maxMinutes, TimeUnit.MINUTES)//
 					.maximumSize(maxSize);
 
-			 if (metricsService!=null && metricsService.getRegistry()!=null) {
-				 builder.recordStats(() -> {
-						return metricsService.getCacheStatsCounter();
-					});
+			if (metricsService != null && metricsService.getRegistry() != null) {
+				builder.recordStats(() -> {
+					return metricsService.getCacheStatsCounter();
+				});
 
-			 }
-			 cache=builder.build();
+			}
+			cache = builder.build();
 		}
 	}
 
@@ -141,6 +141,7 @@ public class ComponentCache {
 		try {
 			mapper.writeValue(writer, cacheableModel);
 		} catch (IOException e) {
+			LOGGER.error("cannot generate checksum because model cannot be serialized to json", e);
 			return null;
 		}
 		return generateChecksum(writer.toString());

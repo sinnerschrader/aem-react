@@ -60,7 +60,7 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "total javascript engine pool size", longValue = 5), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "initial javascript engine pool size", longValue = 0), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_SIZE, label = "component cache max size", longValue = 2000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_MINUTES, label = "component cache max minutes", longValue = 10), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue=false), //
