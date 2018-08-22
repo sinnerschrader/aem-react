@@ -30,7 +30,7 @@ public class ComponentCache {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ComponentCache.class);
 
 	public static interface ResultRenderer {
-		public RenderResult render();
+		public RenderResult render(Object model);
 	}
 
 	Cache<CacheKey, CachedHtml> cache;
@@ -175,9 +175,8 @@ public class ComponentCache {
 						request.setAttribute(ReactScriptEngine.REACT_ROOT_NO_KEY, cachedHtml.getRootNo());
 						LOGGER.debug("returning cache html for {}", path);
 						return result;
-
 					}
-					RenderResult result = render.render();
+					RenderResult result = render.render(cacheableModel);
 					Integer rootNo = (Integer) request.getAttribute(ReactScriptEngine.REACT_ROOT_NO_KEY);
 					put(key, cacheableModel, result, rootNo);
 					// LOGGER.debug("no html cached for {}", path);
@@ -191,7 +190,7 @@ public class ComponentCache {
 
 		}
 
-		return render.render();
+		return render.render(null);
 
 	}
 

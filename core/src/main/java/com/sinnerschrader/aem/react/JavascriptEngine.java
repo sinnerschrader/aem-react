@@ -24,6 +24,7 @@ import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
+import com.sinnerschrader.aem.react.node.NodeRenderer;
 
 /**
  *
@@ -40,6 +41,7 @@ public class JavascriptEngine {
 	private Object sling;
 	private CqxHolder cqxHolder;
 	private ComponentCache cache;
+	private NodeRenderer nodeRenderer;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -180,9 +182,13 @@ public class JavascriptEngine {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
 		}
 
-
 		return cache.cache(new CacheKey(path, resourceType, wcmmode, renderAsJson, selectors), request, path,
-				resourceType, () -> {
+				resourceType, (Object cacheableModel) -> {
+
+					if (cacheableModel != null && nodeRenderer.supports(resourceType)) {
+						return nodeRenderer.render(path, resourceType, wcmmode, selectors.toArray(new String[selectors.size()]), cacheableModel);
+					}
+
 					Invocable invocable = ((Invocable) engine);
 					try {
 						this.cqxHolder.init(cqx);
@@ -199,6 +205,7 @@ public class JavascriptEngine {
 					} catch (NoSuchMethodException | ScriptException e) {
 						throw new TechnicalException("cannot render react on server", e);
 					}
+
 				});
 
 	}
