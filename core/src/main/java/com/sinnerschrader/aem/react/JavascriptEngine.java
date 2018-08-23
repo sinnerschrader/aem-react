@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
-import com.sinnerschrader.aem.react.cache.CacheKey;
-import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
@@ -39,7 +37,6 @@ public class JavascriptEngine {
 	private boolean initialized = false;
 	private Object sling;
 	private CqxHolder cqxHolder;
-	private ComponentCache cache;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
@@ -116,10 +113,9 @@ public class JavascriptEngine {
 		}
 	}
 
-	public JavascriptEngine(ScriptCollectionLoader loader, Object sling, ComponentCache cache) {
+	public JavascriptEngine(ScriptCollectionLoader loader, Object sling) {
 		this.loader = loader;
 		this.sling = sling;
-		this.cache = cache;
 	}
 
 	/**
@@ -174,15 +170,12 @@ public class JavascriptEngine {
 	 */
 	public RenderResult render(SlingHttpServletRequest request, String path, String resourceType, int rootNo,
 			String wcmmode, Cqx cqx, boolean renderAsJson, List<String> selectors) {
-		long startTime = System.currentTimeMillis();
 
 		if (!this.initialized) {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
 		}
 
 
-		return cache.cache(new CacheKey(path, resourceType, wcmmode, renderAsJson, selectors), request, path,
-				resourceType, () -> {
 					Invocable invocable = ((Invocable) engine);
 					try {
 						this.cqxHolder.init(cqx);
@@ -199,7 +192,7 @@ public class JavascriptEngine {
 					} catch (NoSuchMethodException | ScriptException e) {
 						throw new TechnicalException("cannot render react on server", e);
 					}
-				});
+
 
 	}
 

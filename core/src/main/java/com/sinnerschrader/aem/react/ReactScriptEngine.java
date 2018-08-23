@@ -35,6 +35,8 @@ import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.api.ModelFactory;
 import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.api.Sling;
+import com.sinnerschrader.aem.react.cache.CacheKey;
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ReactSlingHttpServletRequestWrapper;
 import com.sinnerschrader.aem.react.json.ResourceMapper;
@@ -71,6 +73,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private boolean disableMapping;
 	private boolean enableReverseMapping;
 	private boolean mangleNameSpaces;
+	private ComponentCache cache;
 
 	/**
 	 * This class is the result of rendering a react component(-tree). It consists
@@ -88,7 +91,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			OsgiServiceFinder finder, DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName,
 			String rootElementClass, org.apache.sling.models.factory.ModelFactory modelFactory,
 			AdapterManager adapterManager, ObjectMapper mapper, ComponentMetricsService metricsService,
-			boolean enableReverseMapping, boolean disableMapping, boolean mangleNameSpaces) {
+			boolean enableReverseMapping, boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
 		this.enginePool = enginePool;
@@ -102,6 +105,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		this.disableMapping = disableMapping;
 		this.enableReverseMapping = enableReverseMapping;
 		this.mangleNameSpaces = mangleNameSpaces;
+		this.cache = cache;
 	}
 
 	@Override
@@ -279,50 +283,56 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 */
 	private RenderResult renderReactMarkup(String mappedPath, String resourceType, int rootNo, String wcmmode,
 			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors) {
-		long start = System.currentTimeMillis();
-		JavascriptEngine javascriptEngine;
-		boolean removeMapper = false;
-		try {
-			SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
-			ResourceMapper resourceMapper = new ResourceMapper(request);
-			removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
-			javascriptEngine = enginePool.borrowObject();
-			javascriptEngine.initialize();
-			try {
-				while (javascriptEngine.isScriptsChanged()) {
-					LOG.info("scripts changed -> invalidate engine");
-					enginePool.invalidateObject(javascriptEngine);
-					javascriptEngine = enginePool.borrowObject();
-				}
-				return javascriptEngine.render(request, mappedPath, resourceType, rootNo, wcmmode,
-						createCqx(scriptContext), renderAsJson, selectors);
-			} finally {
+		SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
+		return cache.cache(new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
+				mappedPath, resourceType, () -> {
 
-				try {
-					if (javascriptEngine != null) {
-						enginePool.returnObject(javascriptEngine);
+					boolean removeMapper = false;
+					try {
+						JavascriptEngine javascriptEngine;
+						ResourceMapper resourceMapper = new ResourceMapper(request);
+						removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
+						javascriptEngine = borrowEngine();
+						try {
+							while (javascriptEngine.isScriptsChanged()) {
+								LOG.info("scripts changed -> invalidate engine");
+								enginePool.invalidateObject(javascriptEngine);
+								javascriptEngine = borrowEngine();
+							}
+							return javascriptEngine.render(request, mappedPath, resourceType, rootNo, wcmmode,
+									createCqx(scriptContext), renderAsJson, selectors);
+						} finally {
+
+							try {
+								if (javascriptEngine != null) {
+									enginePool.returnObject(javascriptEngine);
+								}
+							} catch (IllegalStateException e) {
+								// returned object that is not in the pool any more
+								LOG.error("returned object is not in the pool any more");
+							}
+
+						}
+					} catch (NoSuchElementException e) {
+						LOG.info("engine pool exhausted");
+						throw new TechnicalException("cannot get engine from pool", e);
+					} catch (IllegalStateException e) {
+						throw new TechnicalException("cannot return engine from pool", e);
+					} catch (Exception e) {
+						throw new TechnicalException("error rendering react markup", e);
+					} finally {
+						if (removeMapper) {
+							ResourceMapperLocator.clearInstance();
+						}
 					}
-				} catch (IllegalStateException e) {
-					// returned object that is not in the pool any more
-					LOG.error("returned object is not in the pool any more");
-				}
+				});
 
-			}
-		} catch (NoSuchElementException e) {
-			LOG.info("engine pool exhausted");
-			throw new TechnicalException("cannot get engine from pool", e);
-		} catch (IllegalStateException e) {
-			throw new TechnicalException("cannot return engine from pool", e);
-		} catch (Exception e) {
-			throw new TechnicalException("error rendering react markup", e);
-		} finally {
-			if (removeMapper) {
-				ResourceMapperLocator.clearInstance();
-			}
-			// LOG.debug("ReactScriptEngine.renderReactMarkup took: " +
-			// (System.currentTimeMillis() - start) + "ms");
-		}
+	}
 
+	private JavascriptEngine borrowEngine() throws Exception {
+		JavascriptEngine javascriptEngine = enginePool.borrowObject();
+		javascriptEngine.initialize();
+		return javascriptEngine;
 	}
 
 	private SlingHttpServletRequest getRequest(Bindings bindings) {

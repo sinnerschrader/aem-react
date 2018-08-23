@@ -19,7 +19,6 @@ import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.api.JsProxy;
 import com.sinnerschrader.aem.react.api.Sling;
-import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 
@@ -46,7 +45,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -63,7 +62,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -80,7 +79,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -95,7 +94,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testMoreScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -124,7 +123,7 @@ public class JavascriptEngineTest {
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, new ComponentCache(null, null, 0, 0, null, false));
+		JavascriptEngine engine = new JavascriptEngine(loader, sling);
 		List<HashedScript> scripts = new ArrayList<>();
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);

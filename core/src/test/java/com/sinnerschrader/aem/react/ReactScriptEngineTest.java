@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Sling;
+import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -101,7 +102,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, false, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, false, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -145,7 +147,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEvalDisableMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -181,7 +184,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEvalServerRenderingDisabled() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -217,7 +221,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -238,7 +243,8 @@ public class ReactScriptEngineTest {
 	@Ignore
 	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
 
@@ -268,7 +274,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEvalJsonOnlyNoServerRendering() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
 		slingContext.request().setQueryString("serverRendering=disabled");
@@ -301,7 +308,8 @@ public class ReactScriptEngineTest {
 	@Test
 	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), true, false, false);
+				"test xxx", null, null, null, new ComponentMetricsService(), true, false, false,
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
