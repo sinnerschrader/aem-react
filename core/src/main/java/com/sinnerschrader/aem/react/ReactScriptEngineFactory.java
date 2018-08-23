@@ -132,7 +132,12 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	private boolean initialized = false;
 
+	private ComponentCache cache;
+
 	public synchronized void createScripts() {
+		if (this.cache!=null) {
+			this.cache.clear();
+		}
 		List<HashedScript> newScripts = new LinkedList<>();
 		// we need to add the nashorn polyfill for console, global and AemGlobal
 		String polyFillName = this.getClass().getPackage().getName().replace(".", "/") + "/" + NASHORN_POLYFILL_JS;
@@ -226,12 +231,12 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		ObjectMapper mapper = new ObjectMapperFactory().create(includePattern, excludePattern);
 		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern).enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
 
-		ComponentCache cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
-		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null, cache);
+		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
+		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null);
 		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, javacriptEnginePoolFactory);
 		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
 				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
-				disableMapping, mangleNameSpaces);
+				disableMapping, mangleNameSpaces, cache);
 		try {
 			initialized = false;
 			initializeScripts();

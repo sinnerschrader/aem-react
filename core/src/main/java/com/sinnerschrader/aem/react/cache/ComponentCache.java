@@ -195,4 +195,10 @@ public class ComponentCache {
 
 	}
 
+	public void clear() {
+		if (caching && cache!=null) {
+			this.cache.invalidateAll();
+		}
+	}
+
 }
