@@ -188,7 +188,7 @@ public class IntegrationTest {
 		String json = render();
 		JsonNode cache = new ObjectMapper().readTree(json);
 
-		Assert.assertEquals(content, cache.get("transforms").get(path ).get("content").asText());
+		Assert.assertEquals(content, cache.get("transforms").get(path).get("content").asText());
 
 	}
 
@@ -200,7 +200,7 @@ public class IntegrationTest {
 		Mockito.when(requestDispatcherFactory.getRequestDispatcher(Mockito.any(Resource.class),
 				Mockito.any(RequestDispatcherOptions.class))).thenReturn(dispatcher);
 		Mockito.doAnswer((InvocationOnMock invoke) -> {
-			((SlingHttpServletResponse)invoke.getArguments()[1]).getWriter().println("<div><cq data=\"some\"/></div>");
+			((SlingHttpServletResponse) invoke.getArguments()[1]).getWriter().println("<div><cq data=\"some\"/></div>");
 			return null;
 		}).when(dispatcher).include(Mockito.any(SlingHttpServletRequest.class),
 				Mockito.any(SlingHttpServletResponse.class));
@@ -209,8 +209,9 @@ public class IntegrationTest {
 		JavascriptEngine jsEngine = new JavascriptEngine(loader, new Sling(scriptContext));
 		jsEngine.initialize();
 
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false, mockCache);
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false,
+				mockCache);
 		ClassLoader classLoader = this.getClass().getClassLoader();
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		Mockito.when(dynamicClassLoaderManager.getDynamicClassLoader()).thenReturn(classLoader);

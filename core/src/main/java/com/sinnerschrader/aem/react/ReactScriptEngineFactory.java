@@ -59,8 +59,9 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = "compatible.javax.script.name", value = "jsx"),
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 20), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 8), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "initial javascript engine pool size", longValue = 0), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TIMEOUT, label = "timeout for engine pool", longValue = 10000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_SIZE, label = "component cache max size", longValue = 2000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_MINUTES, label = "component cache max minutes", longValue = 10), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue=false), //
@@ -80,6 +81,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
 	public static final String PROPERTY_POOL_TOTAL_SIZE = "pool.total.size";
 	public static final String PROPERTY_POOL_MIN_SIZE = "pool.min.size";
+	public static final String PROPERTY_POOL_TIMEOUT = "pool.timeout";
 	public static final String PROPERTY_CACHE_MAX_SIZE = "cache.max.size";
 	public static final String PROPERTY_CACHE_DEBUG = "cache.debug";
 	public static final String PROPERTY_CACHE_MAX_MINUTES = "cache.max.minutes";
@@ -209,6 +211,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 				new String[0]);
 		int poolTotalSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TOTAL_SIZE), 20);
 		int maxSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_SIZE), 0);
+		int maxWaitTimeMillis = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TIMEOUT), 10000);
 		int maxMinutes = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_MINUTES), 10);
 		String rootElementName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_ELEMENT_NAME),
 				"div");
@@ -233,8 +236,9 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
 		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null);
-		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, javacriptEnginePoolFactory);
-		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
+		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, maxWaitTimeMillis,javacriptEnginePoolFactory);
+		ObjectPool<JavascriptEngine> secondLevelPool = createPool(poolTotalSize*10, 0,javacriptEnginePoolFactory);
+		this.engine = new ReactScriptEngine(this, pool, secondLevelPool, finder, dynamicClassLoaderManager, rootElementName,
 				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
 				disableMapping, mangleNameSpaces, cache);
 		try {
@@ -281,7 +285,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.listener.deactivate();
 	}
 
-	protected ObjectPool<JavascriptEngine> createPool(int poolTotalSize,
+	protected ObjectPool<JavascriptEngine> createPool(int poolTotalSize,int maxWaitTimeMillis,
 			JavacriptEnginePoolFactory javacriptEnginePoolFactory) {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(poolTotalSize);
@@ -289,8 +293,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		config.setMinIdle(0);
 		config.setLifo(false);
 		config.setFairness(true);
-		config.setBlockWhenExhausted(true);
-		config.setMaxWaitMillis(10000);
+		config.setBlockWhenExhausted(maxWaitTimeMillis>0);
+		config.setMaxWaitMillis(maxWaitTimeMillis);
 		config.setJmxEnabled(true);
 		return new GenericObjectPool<JavascriptEngine>(javacriptEnginePoolFactory, config);
 	}

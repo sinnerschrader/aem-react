@@ -101,8 +101,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, false, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, false, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
@@ -146,8 +146,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEvalDisableMapping() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
@@ -183,8 +183,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEvalServerRenderingDisabled() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
@@ -220,8 +220,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		String resourceType = "/apps/test";
@@ -242,8 +242,8 @@ public class ReactScriptEngineTest {
 	@Test
 	@Ignore
 	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
@@ -273,8 +273,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEvalJsonOnlyNoServerRendering() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
@@ -307,8 +307,8 @@ public class ReactScriptEngineTest {
 
 	@Test
 	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, null, dynamicClassLoaderManager, "span",
-				"test xxx", null, null, null, new ComponentMetricsService(), true, false, false,
+		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+				"span", "test xxx", null, null, null, new ComponentMetricsService(), true, false, false,
 				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
