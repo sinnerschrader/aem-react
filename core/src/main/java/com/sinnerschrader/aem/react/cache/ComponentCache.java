@@ -30,7 +30,7 @@ public class ComponentCache {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ComponentCache.class);
 
 	public static interface ResultRenderer {
-		public RenderResult render();
+		public RenderResult render() throws Exception;
 	}
 
 	Cache<CacheKey, CachedHtml> cache;
@@ -161,7 +161,7 @@ public class ComponentCache {
 	}
 
 	public RenderResult cache(CacheKey key, SlingHttpServletRequest request, String path, String resourceType,
-			ResultRenderer render) {
+			ResultRenderer render) throws Exception {
 		Object cacheableModel = null;
 		if (caching) {
 
@@ -196,7 +196,7 @@ public class ComponentCache {
 	}
 
 	public void clear() {
-		if (caching && cache!=null) {
+		if (caching && cache != null) {
 			this.cache.invalidateAll();
 		}
 	}

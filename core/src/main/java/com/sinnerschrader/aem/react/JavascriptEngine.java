@@ -175,24 +175,21 @@ public class JavascriptEngine {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
 		}
 
+		Invocable invocable = ((Invocable) engine);
+		try {
+			this.cqxHolder.init(cqx);
+			Object AemGlobal = engine.get("AemGlobal");
+			Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType,
+					String.valueOf(rootNo), wcmmode, renderAsJson, selectors.toArray(new String[selectors.size()]));
 
-					Invocable invocable = ((Invocable) engine);
-					try {
-						this.cqxHolder.init(cqx);
-						Object AemGlobal = engine.get("AemGlobal");
-						Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType,
-								String.valueOf(rootNo), wcmmode, renderAsJson,
-								selectors.toArray(new String[selectors.size()]));
+			RenderResult result = new RenderResult();
+			result.html = (String) ((Map<String, Object>) value).get("html");
+			result.cache = ((Map<String, Object>) value).get("state").toString();
 
-						RenderResult result = new RenderResult();
-						result.html = (String) ((Map<String, Object>) value).get("html");
-						result.cache = ((Map<String, Object>) value).get("state").toString();
-
-						return result;
-					} catch (NoSuchMethodException | ScriptException e) {
-						throw new TechnicalException("cannot render react on server", e);
-					}
-
+			return result;
+		} catch (NoSuchMethodException | ScriptException e) {
+			throw new TechnicalException("cannot render react on server", e);
+		}
 
 	}
 
