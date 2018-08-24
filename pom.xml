@@ -8,7 +8,7 @@
     <groupId>com.sinnerschrader.aem.react</groupId>
     <artifactId>aem-react</artifactId>
     <packaging>pom</packaging>
-    <version>2017.3.21i-SNAPSHOT</version>
+    <version>2018.8.23c-SNAPSHOT</version>
     <name>aem react</name>
     <description>aem react library and demo</description>
     <url>www.github.com/sinnerschrader/aem-react</url>
@@ -475,6 +475,12 @@
                 <version>1.7.6</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.2.3</version>
+                <scope>test</scope>
+            </dependency>
             <!-- Apache Sling Dependencies -->
             <dependency>
                 <groupId>org.apache.sling</groupId>
@@ -535,12 +541,6 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.12</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>1.7.6</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.sinnerschrader.aem.react</groupId>
         <artifactId>aem-react</artifactId>
-        <version>2017.3.21i-SNAPSHOT</version>
+        <version>2018.8.23c-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>core</artifactId>
@@ -257,8 +257,8 @@
             <artifactId>org.apache.sling.models.api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

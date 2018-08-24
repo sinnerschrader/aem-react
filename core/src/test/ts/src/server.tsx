@@ -5,7 +5,6 @@ import {Container} from "aem-react-js/lib/di/Container";
 import {Cache} from "aem-react-js/lib/store/Cache";
 import {ServerSling} from "aem-react-js/lib/store/ServerSling";
 
-//declare var Cqx: any;
 declare var AemGlobal: any;
 console.log("initializing server.tsx");
 
@@ -17,7 +16,7 @@ AemGlobal.registry = rootComponentRegistry;
 /*tslint:disable-next-line*/
 declare var Java: any;
 
-export function renderReactComponent(path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
+AemGlobal.renderReactComponent = function(path: string, resourceType: string, wcmmode: string, renderRootDialog: boolean,
                                            reactContext: ReactContext, javaSelectors: object, cqx: any): any {
     const selectors: string[] = Java.from(javaSelectors);
 

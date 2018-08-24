@@ -41,12 +41,9 @@ public class JavascriptEngineTest {
 	@Mock
 	private ScriptCollectionLoader loader;
 
-	@Mock
-	private Sling sling;
-
 	@Test
-	public void testNoChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling);
+	public void testNoChanges()  {
+		JavascriptEngine engine = new JavascriptEngine(loader);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -58,12 +55,11 @@ public class JavascriptEngineTest {
 		scripts.add(scriptv2);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
 		Assert.assertFalse(engine.isScriptsChanged());
-
 	}
 
 	@Test
 	public void testChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling);
+		JavascriptEngine engine = new JavascriptEngine(loader);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -80,7 +76,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling);
+		JavascriptEngine engine = new JavascriptEngine(loader);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -95,7 +91,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testMoreScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling);
+		JavascriptEngine engine = new JavascriptEngine(loader);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -125,7 +121,7 @@ public class JavascriptEngineTest {
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine(loader, sling);
+		JavascriptEngine engine = new JavascriptEngine(loader);
 		List<HashedScript> scripts = new ArrayList<>();
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);
@@ -142,25 +138,6 @@ public class JavascriptEngineTest {
 		Assert.assertEquals("s1", tree.get("selectors").get(0).textValue());
 		Assert.assertEquals(MockCqx.CQX_RESPONSE, tree.get("cqx").textValue());
 		Assert.assertEquals(reactContext, result.reactContext);
-	}
-
-	@Test
-	public void testConsole() {
-		JavascriptEngine.Console console = new JavascriptEngine.Console();
-		console.debug("test", null);
-		console.debug("test", "","");
-		console.info("test", null);
-		console.info("test");
-		console.error("test", null);
-		console.error("test");
-		console.log("test", null);
-		console.log("test");
-		console.warn("test", null);
-		console.warn("test");
-		console.time("test");
-		console.timeEnd("test");
-
-
 	}
 
 }

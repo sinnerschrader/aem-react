@@ -209,7 +209,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 			initializeScripts();
 
 			ScriptCollectionLoader loader = createLoader(scriptResources);
-			JavascriptEngine jsEngine = new JavascriptEngine(loader, null);
+			JavascriptEngine jsEngine = new JavascriptEngine(loader);
 			jsEngine.initialize(true);
 
 			this.engine = new ReactScriptEngine(this, jsEngine, finder, dynamicClassLoaderManager, rootElementName,

@@ -283,9 +283,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			}
 			return this.javascriptEngine.render(mappedPath, resourceType, wcmmode, createCqx(scriptContext),
 					renderAsJson, reactContext, selectors);
-		} catch (NoSuchElementException e) {
-			LOG.info("engine pool exhausted");
-			throw new TechnicalException("cannot get engine from pool", e);
+
 		} catch (IllegalStateException e) {
 			throw new TechnicalException("cannot return engine from pool", e);
 		} catch (Exception e) {
