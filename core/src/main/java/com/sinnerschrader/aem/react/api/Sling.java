@@ -88,14 +88,15 @@ public class Sling {
 	public static final String ATTRIBUTE_AEM_REACT_DIALOG = "AEM_REACT_DIALOG";
 
 	public static class EditDialog {
-		private static final Map<String, String> REACT_MAPPING = new HashMap<String, String>() {
-			private static final long serialVersionUID = 1L;
 
-			{
-				put("class", "className");
-				put("for", "htmlFor");
-			}
-		};
+		private static final Map<String, String> REACT_MAPPING;
+		static {
+			HashMap<String, String> map = new HashMap<>(4);
+			map.put("class", "className");
+			map.put("for", "htmlFor");
+
+			REACT_MAPPING = map;
+		}
 
 		private EditDialog child;
 
