@@ -28,6 +28,18 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -148,8 +160,8 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
 
+    <profiles>
         <!-- Development profile: install only the bundle -->
         <profile>
             <id>autoInstallBundle</id>
@@ -172,8 +184,8 @@
                 </plugins>
             </build>
         </profile>
-
     </profiles>
+
     <dependencies>
         <dependency>
             <groupId>com.sinnerschrader.aem.react</groupId>
