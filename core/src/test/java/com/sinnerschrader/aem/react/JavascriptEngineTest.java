@@ -3,6 +3,7 @@ package com.sinnerschrader.aem.react;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -124,18 +125,17 @@ public class JavascriptEngineTest {
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, new ComponentCache(null, null, 0, 0, null, false));
+		JavascriptEngine engine = new JavascriptEngine(loader, sling,
+				new ComponentCache(null, null, 0, 0, null, false),
+				false, null
+		);
 		List<HashedScript> scripts = new ArrayList<>();
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
 		engine.initialize();
 
-		List<String> selectors = new ArrayList() {
-			{
-				this.add("s1");
-			}
-		};
+		List<String> selectors = Collections.singletonList("s1");
 		RenderResult result = engine.render(null, "/content", "/apps/test", 1, "disabled", new MockCqx(), false,
 				selectors);
 		Assert.assertEquals("my html", result.html);

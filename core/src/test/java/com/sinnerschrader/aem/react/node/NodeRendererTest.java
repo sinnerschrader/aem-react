@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -56,16 +58,17 @@ public class NodeRendererTest {
 
 		ArgumentCaptor<HttpPost> postCaptor = createMocks(html);
 
-		NodeRenderer nodeRenderer = new NodeRenderer("/", client, objectMapper, editDialogLoader);
+		final String resourceType = "component/test";
+		NodeRenderer nodeRenderer = new NodeRenderer("/", Collections.singleton(resourceType), client, objectMapper, editDialogLoader);
 		TestModel cacheableModel = new TestModel();
 		cacheableModel.setText("Moin");
-		RenderResult renderResult = nodeRenderer.render("/content", "component/test", "disabled", new String[0],
+		RenderResult renderResult = nodeRenderer.render("/content", resourceType, "disabled", new String[0],
 				cacheableModel);
 
 		Assert.assertEquals(html, renderResult.html);
 
 		assertResult(postCaptor, (ObjectNode post) -> {
-			Assert.assertEquals("component/test", post.get("resourceType").textValue());
+			Assert.assertEquals(resourceType, post.get("resourceType").textValue());
 			Assert.assertEquals("disabled", post.get("wcmmode").textValue());
 			Assert.assertEquals("/content", post.get("path").textValue());
 			JsonNode cache = post.get("cache");
@@ -74,31 +77,29 @@ public class NodeRendererTest {
 			Assert.assertEquals("Moin", transform.get("text").textValue());
 
 			Assert.assertEquals(objectMapper.writeValueAsString(cache), renderResult.cache);
-
 		});
-
 	}
 
 	@Test
 	public void renderSubTree() throws Exception {
-
 		String html = "<html>";
 
 		ArgumentCaptor<HttpPost> postCaptor = createMocks(html);
 
-		NodeRenderer nodeRenderer = new NodeRenderer("/", client, objectMapper, editDialogLoader);
+		final String resourceType = "component/test";
+		NodeRenderer nodeRenderer = new NodeRenderer("/",  Collections.singleton(resourceType), client, objectMapper, editDialogLoader);
 		TestModel testModel = new TestModel();
 		testModel.setText("Moin");
 		CompoundModel cacheableModel = new CompoundModel();
 		cacheableModel.setTestModel(testModel);
 		cacheableModel.setHeadline("Headline");
-		RenderResult renderResult = nodeRenderer.render("/content", "component/test", "disabled", new String[0],
+		RenderResult renderResult = nodeRenderer.render("/content", resourceType, "disabled", new String[0],
 				cacheableModel);
 
 		Assert.assertEquals(html, renderResult.html);
 
 		assertResult(postCaptor, (ObjectNode post) -> {
-			Assert.assertEquals("component/test", post.get("resourceType").textValue());
+			Assert.assertEquals(resourceType, post.get("resourceType").textValue());
 			Assert.assertEquals("disabled", post.get("wcmmode").textValue());
 			Assert.assertEquals("/content", post.get("path").textValue());
 			JsonNode cache = post.get("cache");
@@ -110,9 +111,7 @@ public class NodeRendererTest {
 			Assert.assertEquals("Moin", testTransform.get("text").textValue());
 
 			Assert.assertEquals(objectMapper.writeValueAsString(cache), renderResult.cache);
-
 		});
-
 	}
 
 	private void assertResult(ArgumentCaptor<HttpPost> postCaptor, ResultAssertion assertion) throws Exception {
@@ -124,10 +123,9 @@ public class NodeRendererTest {
 		}
 	}
 
-	private ArgumentCaptor<HttpPost> createMocks(String html)
-			throws IOException, UnsupportedEncodingException, ClientProtocolException {
+	private ArgumentCaptor<HttpPost> createMocks(String html) throws IOException {
 		Mockito.when(response.getEntity()).thenReturn(entity);
-		Mockito.when(entity.getContent()).thenReturn(new ByteArrayInputStream(html.getBytes("UTF-8")));
+		Mockito.when(entity.getContent()).thenReturn(new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8)));
 		Mockito.when(entity.getContentLength()).thenReturn((long) html.length());
 		Mockito.when(entity.getContentEncoding()).thenReturn(contentEncodingHeader);
 		Mockito.when(contentEncodingHeader.getValue()).thenReturn("UTF-8");

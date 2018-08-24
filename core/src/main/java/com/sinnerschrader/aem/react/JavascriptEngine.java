@@ -176,7 +176,6 @@ public class JavascriptEngine {
 	 */
 	public RenderResult render(SlingHttpServletRequest request, String path, String resourceType, int rootNo,
 			String wcmmode, Cqx cqx, boolean renderAsJson, List<String> selectors) {
-		long startTime = System.currentTimeMillis();
 
 		if (!this.initialized) {
 			throw new IllegalStateException("JavascriptEngine is not initialized");
@@ -195,7 +194,7 @@ public class JavascriptEngine {
 						Object AemGlobal = engine.get("AemGlobal");
 						Object value = invocable.invokeMethod(AemGlobal, "renderReactComponent", path, resourceType,
 								String.valueOf(rootNo), wcmmode, renderAsJson,
-								selectors.toArray(new String[selectors.size()]));
+								selectors.toArray(new String[0]));
 
 						RenderResult result = new RenderResult();
 						result.html = (String) ((Map<String, Object>) value).get("html");
@@ -205,9 +204,7 @@ public class JavascriptEngine {
 					} catch (NoSuchMethodException | ScriptException e) {
 						throw new TechnicalException("cannot render react on server", e);
 					}
-
 				});
-
 	}
 
 	public ScriptEngine getEngine() {
@@ -227,7 +224,6 @@ public class JavascriptEngine {
 			}
 		}
 		return false;
-
 	}
 
 }
