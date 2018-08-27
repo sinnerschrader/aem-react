@@ -17,9 +17,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.pool2.ObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -59,9 +56,6 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = "compatible.javax.script.name", value = "jsx"),
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TOTAL_SIZE, label = "total javascript engine pool size", longValue = 8), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_MIN_SIZE, label = "initial javascript engine pool size", longValue = 0), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_POOL_TIMEOUT, label = "timeout for engine pool", longValue = 10000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_SIZE, label = "component cache max size", longValue = 2000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_MINUTES, label = "component cache max minutes", longValue = 10), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue=false), //
@@ -79,9 +73,6 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	public static final String PROPERTY_SCRIPTS_PATHS = "scripts.paths";
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
-	public static final String PROPERTY_POOL_TOTAL_SIZE = "pool.total.size";
-	public static final String PROPERTY_POOL_MIN_SIZE = "pool.min.size";
-	public static final String PROPERTY_POOL_TIMEOUT = "pool.timeout";
 	public static final String PROPERTY_CACHE_MAX_SIZE = "cache.max.size";
 	public static final String PROPERTY_CACHE_DEBUG = "cache.debug";
 	public static final String PROPERTY_CACHE_MAX_MINUTES = "cache.max.minutes";
@@ -176,15 +167,12 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	}
 
 	protected ScriptCollectionLoader createLoader(final String[] scriptResources) {
-
 		return new ScriptCollectionLoader() {
-
 			@Override
 			public Iterator<HashedScript> iterator() {
 				return scripts.iterator();
 			}
 		};
-
 	}
 
 	public ReactScriptEngineFactory() {
@@ -209,9 +197,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.subServiceName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_SUBSERVICENAME), "");
 		scriptResources = PropertiesUtil.toStringArray(context.getProperties().get(PROPERTY_SCRIPTS_PATHS),
 				new String[0]);
-		int poolTotalSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TOTAL_SIZE), 20);
 		int maxSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_SIZE), 2000);
-		int maxWaitTimeMillis = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TIMEOUT), 10000);
 		int maxMinutes = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_MINUTES), 10);
 		String rootElementName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_ELEMENT_NAME),
 				"div");
@@ -235,17 +221,14 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern).enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
 
 		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
-		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null);
-		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, maxWaitTimeMillis,javacriptEnginePoolFactory);
-		ObjectPool<JavascriptEngine> secondLevelPool = createPool(poolTotalSize*10, 0,javacriptEnginePoolFactory);
-		this.engine = new ReactScriptEngine(this, pool, secondLevelPool, finder, dynamicClassLoaderManager, rootElementName,
-				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
-				disableMapping, mangleNameSpaces, cache);
+
 		try {
 			initialized = false;
 			initializeScripts();
-			int minEngineCount = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_MIN_SIZE), 5);
-			initializeEngines(pool, minEngineCount);
+
+			this.engine = new ReactScriptEngine(this, loader, finder, dynamicClassLoaderManager, rootElementName,
+					rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
+					disableMapping, mangleNameSpaces, cache);
 		} catch (Exception e) {
 			LOGGER.info("cannot load and listen to script on initialize. will try again later", e);
 		}
@@ -285,20 +268,6 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.listener.deactivate();
 	}
 
-	protected ObjectPool<JavascriptEngine> createPool(int poolTotalSize,int maxWaitTimeMillis,
-			JavacriptEnginePoolFactory javacriptEnginePoolFactory) {
-		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-		config.setMaxTotal(poolTotalSize);
-		config.setMaxIdle(poolTotalSize);
-		config.setMinIdle(0);
-		config.setLifo(false);
-		config.setFairness(true);
-		config.setBlockWhenExhausted(maxWaitTimeMillis>0);
-		config.setMaxWaitMillis(maxWaitTimeMillis);
-		config.setJmxEnabled(true);
-		return new GenericObjectPool<JavascriptEngine>(javacriptEnginePoolFactory, config);
-	}
-
 	@Override
 	public ScriptEngine getScriptEngine() {
 		if (!initialized) {
@@ -325,24 +294,5 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	protected ClassLoader getClassLoader() {
 		return dynamicClassLoader;
-	}
-
-	private void initializeEngines(ObjectPool<JavascriptEngine> pool, int minEngineCount) {
-		try {
-			JavascriptEngine[] engines = new JavascriptEngine[minEngineCount];
-			for (int i = minEngineCount; i > 0; --i) {
-				JavascriptEngine engine = pool.borrowObject();
-				engine.initialize();
-				engines[i - 1] = engine;
-			}
-
-			for (int i = minEngineCount; i > 0; --i) {
-				pool.returnObject(engines[i - 1]);
-			}
-
-			LOG.info(pool.getNumActive() + pool.getNumIdle() + " engines initialized");
-		} catch (Exception e) {
-			LOG.error("Unable to initialize script engines", e);
-		}
 	}
 }

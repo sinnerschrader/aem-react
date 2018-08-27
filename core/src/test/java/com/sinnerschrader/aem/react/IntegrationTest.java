@@ -193,9 +193,7 @@ public class IntegrationTest {
 	}
 
 	private String render() throws Exception, ScriptException {
-		Mockito.when(loader.iterator()).thenAnswer((InvocationOnMock mock) -> {
-			return createScripts().iterator();
-		});
+		Mockito.when(loader.iterator()).thenAnswer((InvocationOnMock mock) -> createScripts().iterator());
 
 		Mockito.when(requestDispatcherFactory.getRequestDispatcher(Mockito.any(Resource.class),
 				Mockito.any(RequestDispatcherOptions.class))).thenReturn(dispatcher);
@@ -206,10 +204,10 @@ public class IntegrationTest {
 				Mockito.any(SlingHttpServletResponse.class));
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		ScriptContext scriptContext = new SimpleScriptContext();
-		JavascriptEngine jsEngine = new JavascriptEngine(loader, new Sling(scriptContext));
-		jsEngine.initialize();
+		JavascriptEngine jsEngine = new JavascriptEngine(loader);
+		jsEngine.initialize(true);
 
-		ReactScriptEngine r = new ReactScriptEngine(factory, enginePool, enginePool, null, dynamicClassLoaderManager,
+		ReactScriptEngine r = new ReactScriptEngine(factory, loader,null, dynamicClassLoaderManager,
 				"span", "test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false,
 				mockCache);
 		ClassLoader classLoader = this.getClass().getClassLoader();

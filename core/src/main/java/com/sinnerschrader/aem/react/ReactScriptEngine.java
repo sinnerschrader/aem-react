@@ -10,9 +10,9 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
+import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.pool2.ObjectPool;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.AdapterManager;
@@ -52,8 +52,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
 	public static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
 
-	private static final String CURRENT_COMPONENT_ID_KEY = ReactScriptEngine.class.getName() + "_CURRENT_COMPONENT_ID";
-
 	public interface Command {
 		Object execute(JavascriptEngine e);
 	}
@@ -87,15 +85,14 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public String cache;
 	}
 
-	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
-			ObjectPool<JavascriptEngine> secondLevelEnginePool, OsgiServiceFinder finder,
-			DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
-			org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
-			ObjectMapper mapper, ComponentMetricsService metricsService, boolean enableReverseMapping,
-			boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
+	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ScriptCollectionLoader loader, OsgiServiceFinder finder,
+								DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
+								org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
+								ObjectMapper mapper, ComponentMetricsService metricsService, boolean enableReverseMapping,
+								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
-		this.poolManager = new PoolManager(enginePool, secondLevelEnginePool);
+		this.poolManager = new PoolManager(loader);
 		this.finder = finder;
 		this.dynamicClassLoaderManager = dynamicClassLoaderManager;
 		this.rootElementName = rootElementName;
@@ -296,13 +293,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 						try {
 							ResourceMapper resourceMapper = new ResourceMapper(request);
 							removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
-							return engine.render(request, mappedPath, resourceType, rootNo, wcmmode,
+							return engine.render(mappedPath, resourceType, rootNo, wcmmode,
 									createCqx(scriptContext), renderAsJson, selectors);
-						} catch (NoSuchElementException e) {
-							LOG.info("engine pool exhausted");
-							throw new TechnicalException("cannot get engine from pool", e);
-						} catch (IllegalStateException e) {
-							throw new TechnicalException("cannot return engine from pool", e);
 						} catch (Exception e) {
 							throw new TechnicalException("error rendering react markup", e);
 						} finally {
