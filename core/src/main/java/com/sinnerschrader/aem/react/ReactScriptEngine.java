@@ -10,6 +10,8 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
@@ -44,6 +46,7 @@ import com.sinnerschrader.aem.react.mapping.ResourceResolverUtils;
 import com.sinnerschrader.aem.react.metrics.ComponentMetrics;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
+@Slf4j
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	private static final String JSON_RENDER_SELECTOR = "json";
@@ -58,19 +61,19 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	public static final String SERVER_RENDERING_DISABLED = "disabled";
 	public static final String SERVER_RENDERING_PARAM = "serverRendering";
-	private static final Logger LOG = LoggerFactory.getLogger(ReactScriptEngine.class);
-	private ObjectPool<JavascriptEngine> enginePool;
-	private OsgiServiceFinder finder;
-	private DynamicClassLoaderManager dynamicClassLoaderManager;
-	private String rootElementName;
-	private String rootElementClass;
-	private org.apache.sling.models.factory.ModelFactory modelFactory;
-	private AdapterManager adapterManager;
-	private ObjectMapper mapper;
-	private ComponentMetricsService metricsService;
-	private boolean disableMapping;
-	private boolean enableReverseMapping;
-	private boolean mangleNameSpaces;
+
+	private final ObjectPool<JavascriptEngine> enginePool;
+	private final OsgiServiceFinder osgiServiceFinder;
+	private final DynamicClassLoaderManager dynamicClassLoaderManager;
+	private final String rootElementName;
+	private final String rootElementClass;
+	private final org.apache.sling.models.factory.ModelFactory modelFactory;
+	private final AdapterManager adapterManager;
+	private final ObjectMapper objectMapper;
+	private final ComponentMetricsService metricsService;
+	private final boolean disableMapping;
+	private final boolean enableReverseMapping;
+	private final boolean mangleNameSpaces;
 
 	/**
 	 * This class is the result of rendering a react component(-tree). It consists
@@ -84,20 +87,23 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public String cache;
 	}
 
-	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
-			OsgiServiceFinder finder, DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName,
+	@Builder
+	protected ReactScriptEngine(
+			ReactScriptEngineFactory scriptEngineFactory, ObjectPool<JavascriptEngine> enginePool,
+			OsgiServiceFinder osgiServiceFinder, DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName,
 			String rootElementClass, org.apache.sling.models.factory.ModelFactory modelFactory,
-			AdapterManager adapterManager, ObjectMapper mapper, ComponentMetricsService metricsService,
-			boolean enableReverseMapping, boolean disableMapping, boolean mangleNameSpaces) {
+			AdapterManager adapterManager, ObjectMapper objectMapper, ComponentMetricsService metricsService,
+			boolean enableReverseMapping, boolean disableMapping, boolean mangleNameSpaces
+	) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
 		this.enginePool = enginePool;
-		this.finder = finder;
+		this.osgiServiceFinder = osgiServiceFinder;
 		this.dynamicClassLoaderManager = dynamicClassLoaderManager;
 		this.rootElementName = rootElementName;
 		this.rootElementClass = rootElementClass;
 		this.modelFactory = modelFactory;
-		this.mapper = mapper;
+		this.objectMapper = objectMapper;
 		this.metricsService = metricsService;
 		this.disableMapping = disableMapping;
 		this.enableReverseMapping = enableReverseMapping;
@@ -129,9 +135,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			final List<String> selectors;
 			boolean renderAsJson = rawSelectors.indexOf(JSON_RENDER_SELECTOR) >= 0;
 			if (renderAsJson) {
-				selectors = rawSelectors.stream().filter((String selector) -> {
-					return !selector.equals(JSON_RENDER_SELECTOR);
-				}).collect(Collectors.toList());
+				selectors = rawSelectors.stream()
+						.filter((String selector) -> !JSON_RENDER_SELECTOR.equals(selector))
+						.collect(Collectors.toList());
 			} else {
 				selectors = rawSelectors;
 			}
@@ -205,7 +211,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				} else {
 					output = wrapHtml(mappedPath, resource, renderedHtml, serverRendering, getWcmMode(request),
 							cacheString, selectors);
-
 				}
 
 				scriptContext.getWriter().write(output);
@@ -260,9 +265,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingScriptHelper sling = (SlingScriptHelper) getBindings(ctx).get(SlingBindings.SLING);
 
 		ClassLoader classLoader = dynamicClassLoaderManager.getDynamicClassLoader();
-		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, mapper,
+		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, objectMapper,
 				request.getResourceResolver());
-		return new Cqx(new Sling(ctx), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
+		return new Cqx(new Sling(ctx), osgiServiceFinder, reactModelFactory, sling.getService(XSSAPI.class), objectMapper);
 	}
 
 	/**
@@ -279,7 +284,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	 */
 	private RenderResult renderReactMarkup(String mappedPath, String resourceType, int rootNo, String wcmmode,
 			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors) {
-		long start = System.currentTimeMillis();
+
 		JavascriptEngine javascriptEngine;
 		boolean removeMapper = false;
 		try {

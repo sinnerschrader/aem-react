@@ -1,9 +1,13 @@
 package com.sinnerschrader.aem.react;
 
+import javax.jcr.RepositoryException;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -12,10 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.RepositoryException;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-
+import com.sinnerschrader.aem.reactapi.json.CacheView;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
@@ -28,15 +30,14 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.osgi.service.component.ComponentContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,12 +51,14 @@ import com.sinnerschrader.aem.react.loader.JcrResourceChangeListener;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.loader.ScriptLoader;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
+import com.sinnerschrader.aem.react.node.EditDialogLoader;
+import com.sinnerschrader.aem.react.node.NodeRenderer;
 import com.sinnerschrader.aem.react.repo.RepositoryConnectionFactory;
-import com.sinnerschrader.aem.reactapi.json.CacheView;
 
 @Component(label = "ReactJs Script Engine Factory", metatype = true)
 @Service(ScriptEngineFactory.class)
-@Properties({ @Property(name = "service.description", value = "Reactjs Templating Engine"), //
+@Properties({
+		@Property(name = "service.description", value = "Reactjs Templating Engine"), //
 		@Property(name = "compatible.javax.script.name", value = "jsx"),
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SCRIPTS_PATHS, label = "the jcr paths to the scripts libraries", value = {}, cardinality = Integer.MAX_VALUE), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
@@ -70,11 +73,30 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ENABLE_REVERSE_MAPPING, label = "incoming sling mapping is not supported", description = "If the incoming sling mapping is not supported, then this optioen will make sure aem react works as expected", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MAPPING_DISABLE, label = "Disable sling mapping in react completely", description = "check this option to disable sling mapping in aem react.", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MANGLE_NAMESPACES, label = "mangles namespaces", description = "tell aemr eact how slingmapping handles namespace mangling.", boolValue = true), //
-		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = "") //
-})
-public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
+		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = ""), //
 
-	private static final Logger LOG = LoggerFactory.getLogger(ReactScriptEngineFactory.class);
+		@Property(
+				name = ReactScriptEngineFactory.NODE_RENDERER_ENABLED_KEY,
+				label = "Wheter the node renderer should be used",
+				description = "Boolean wheter to use the node renderer",
+				value = ReactScriptEngineFactory.NODE_RENDERER_ENABLED_DEFAULT_VALUE
+		),
+		@Property(
+				name = ReactScriptEngineFactory.NODE_RENDERER_URL_KEY,
+				label = "The url of node renderer",
+				description = "The endpoint of the lambda function or node server",
+				value = ReactScriptEngineFactory.NODE_RENDERER_URL_DEFAULT
+		),
+		@Property(
+				name = ReactScriptEngineFactory.NODE_RENDERER_RESOURCE_TYPES_KEY,
+				label = "The supported resource types of the node renderer",
+				description = "A list of resource types that the node / lambda function ca render",
+				value = ReactScriptEngineFactory.NODE_RENDERER_RESOURCE_TYPES_M031,
+				cardinality = Integer.MAX_VALUE
+		),
+})
+@Slf4j
+public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	public static final String PROPERTY_SCRIPTS_PATHS = "scripts.paths";
 	public static final String PROPERTY_SUBSERVICENAME = "subServiceName";
@@ -90,6 +112,18 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public static final String PROPERTY_MANGLE_NAMESPACES = "mapping.mangle.namespaces";
 	public static final String JSON_RESOURCEMAPPING_INCLUDE_PATTERN = "json.resourcemapping.include.pattern";
 	public static final String JSON_RESOURCEMAPPING_EXCLUDE_PATTERN = "json.resourcemapping.exclude.pattern";
+
+	static final String NODE_RENDERER_ENABLED_KEY = "noderenderer.enabled";
+	static final String NODE_RENDERER_ENABLED_DEFAULT_VALUE = "true";
+
+	static final String NODE_RENDERER_URL_KEY = "noderenderer.url";
+	static final String NODE_RENDERER_URL_DEFAULT = "https://euhvipra3j.execute-api.eu-central-1.amazonaws.com/default/renderReactComponent";
+
+	static final String NODE_RENDERER_RESOURCE_TYPES_KEY = "noderenderer.resourcetypes";
+	static final String NODE_RENDERER_RESOURCE_TYPES_M031 = "vw-ngw/editorial/components/content/m031_textLink";
+	private static final String[] NODE_RENDERER_RESOURCE_TYPES_DEFAULT = {
+			NODE_RENDERER_RESOURCE_TYPES_M031
+	};
 
 	@Reference
 	private ServletResolver servletResolver;
@@ -123,12 +157,8 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	private JcrResourceChangeListener listener;
 	private String subServiceName;
 
-	private static Logger LOGGER = LoggerFactory.getLogger(ReactScriptEngineFactory.class);
-
 	@Reference
 	private RepositoryConnectionFactory repositoryConnectionFactory;
-	private boolean disableMapping;
-	private boolean enableReverseMapping;
 
 	private boolean initialized = false;
 
@@ -142,7 +172,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 			throw new TechnicalException("cannot find initial script " + polyFillName);
 		}
 		try {
-			newScripts.add(createHashedScript("polyFillUrl", new InputStreamReader(polyFillUrl.openStream(), "UTF-8")));
+			newScripts.add(createHashedScript("polyFillUrl", new InputStreamReader(polyFillUrl.openStream(), StandardCharsets.UTF_8)));
 		} catch (IOException | TechnicalException e) {
 			throw new TechnicalException("cannot open stream to " + polyFillUrl, e);
 		}
@@ -151,18 +181,17 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 			try (Reader reader = scriptLoader.loadJcrScript(scriptResource, subServiceName)) {
 				newScripts.add(createHashedScript(scriptResource, reader));
 			} catch (TechnicalException | IOException e) {
-				LOGGER.error("cannot load script resources", e);
+				LOG.error("cannot load script resources", e);
 			}
 		}
 		this.scripts = newScripts;
 	}
 
 	private HashedScript createHashedScript(String id, Reader reader) {
-		String script;
 		try {
-			script = IOUtils.toString(reader);
-			byte[] checksum = MessageDigest.getInstance("MD5").digest(script.getBytes("UTF-8"));
-			return new HashedScript(new String(Base64.getEncoder().encode(checksum), "UTF-8"), script, id);
+			String script = IOUtils.toString(reader);
+			byte[] checksum = MessageDigest.getInstance("MD5").digest(script.getBytes(StandardCharsets.UTF_8));
+			return new HashedScript(new String(Base64.getEncoder().encode(checksum), StandardCharsets.UTF_8), script, id);
 		} catch (IOException | NoSuchAlgorithmException e) {
 			throw new TechnicalException("cannot create hashed script " + id, e);
 		}
@@ -199,46 +228,72 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	@Activate
 	public void initialize(final ComponentContext context, Map<String, Object> properties) {
 
-		this.subServiceName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_SUBSERVICENAME), "");
-		scriptResources = PropertiesUtil.toStringArray(context.getProperties().get(PROPERTY_SCRIPTS_PATHS),
-				new String[0]);
-		int poolTotalSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_TOTAL_SIZE), 20);
-		int maxSize = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_SIZE), 0);
-		int maxMinutes = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_CACHE_MAX_MINUTES), 10);
-		String rootElementName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_ELEMENT_NAME),
-				"div");
-		String rootElementClassName = PropertiesUtil.toString(context.getProperties().get(PROPERTY_ROOT_CLASS_NAME),
-				"");
-		boolean mangleNameSpaces = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MANGLE_NAMESPACES),
-				true);
-		this.disableMapping = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_MAPPING_DISABLE), false);
-		boolean debugCache = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_CACHE_DEBUG), false);
-		this.enableReverseMapping = !disableMapping
-				&& PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_ENABLE_REVERSE_MAPPING), false);
+		ContextPropertyHelper ctxPropHelper = new ContextPropertyHelper(context.getProperties());
+
+		this.subServiceName = ctxPropHelper.toString(PROPERTY_SUBSERVICENAME, "");
+		this.scriptResources = ctxPropHelper.toStringArray(PROPERTY_SCRIPTS_PATHS, new String[0]);
+		int poolTotalSize = ctxPropHelper.toInteger(PROPERTY_POOL_TOTAL_SIZE, 20);
+		int maxSize = ctxPropHelper.toInteger(PROPERTY_CACHE_MAX_SIZE, 0);
+		int maxMinutes = ctxPropHelper.toInteger(PROPERTY_CACHE_MAX_MINUTES, 10);
+		String rootElementName = ctxPropHelper.toString(PROPERTY_ROOT_ELEMENT_NAME, "div");
+		String rootElementClassName = ctxPropHelper.toString(PROPERTY_ROOT_CLASS_NAME,"");
+		boolean mangleNameSpaces = ctxPropHelper.toBoolean(PROPERTY_MANGLE_NAMESPACES, true);
+		boolean disableMapping = ctxPropHelper.toBoolean(PROPERTY_MAPPING_DISABLE, false);
+		boolean debugCache = ctxPropHelper.toBoolean(PROPERTY_CACHE_DEBUG, false);
+		boolean enableReverseMapping = !disableMapping
+				&& ctxPropHelper.toBoolean(PROPERTY_ENABLE_REVERSE_MAPPING, false);
 		ScriptCollectionLoader loader = createLoader(scriptResources);
 
-		String includePattern = disableMapping ? null
-				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_INCLUDE_PATTERN),
-						"^/content");
-		String excludePattern = disableMapping ? null
-				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
+		String includePattern = disableMapping
+				? null
+				: ctxPropHelper.toString(JSON_RESOURCEMAPPING_INCLUDE_PATTERN, "^/content");
+		String excludePattern = disableMapping
+				? null
+				: ctxPropHelper.toString(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, null);
 
 		ObjectMapper mapper = new ObjectMapperFactory().create(includePattern, excludePattern);
-		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern).enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
+		ObjectWriter cacheWriter = new ObjectMapperFactory()
+				.create(includePattern, excludePattern)
+				.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+				.writerWithView(CacheView.class);
+
+		boolean nodeRendererEnabled = ctxPropHelper.toBoolean(NODE_RENDERER_ENABLED_KEY,
+				Boolean.parseBoolean(NODE_RENDERER_ENABLED_DEFAULT_VALUE));
+		String nodeRendererUrl = ctxPropHelper.toString(NODE_RENDERER_URL_KEY, NODE_RENDERER_URL_DEFAULT);
+		String[] nodeRendererResourceTypes = ctxPropHelper.toStringArray(NODE_RENDERER_RESOURCE_TYPES_KEY,
+				NODE_RENDERER_RESOURCE_TYPES_DEFAULT);
+		EditDialogLoader editDialogLoader = null;
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		NodeRenderer nodeRenderer = new NodeRenderer(nodeRendererUrl, nodeRendererResourceTypes,
+				httpClient, mapper, editDialogLoader);
 
 		ComponentCache cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
-		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null, cache);
+		JavacriptEnginePoolFactory javacriptEnginePoolFactory = new JavacriptEnginePoolFactory(loader, null,
+				cache, nodeRendererEnabled, nodeRenderer);
 		ObjectPool<JavascriptEngine> pool = createPool(poolTotalSize, javacriptEnginePoolFactory);
-		this.engine = new ReactScriptEngine(this, pool, finder, dynamicClassLoaderManager, rootElementName,
-				rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
-				disableMapping, mangleNameSpaces);
+
+		this.engine = ReactScriptEngine.builder()
+				.scriptEngineFactory(this)
+				.enginePool(pool)
+				.osgiServiceFinder(finder)
+				.dynamicClassLoaderManager(dynamicClassLoaderManager)
+				.rootElementName(rootElementName)
+				.rootElementClass(rootElementClassName)
+				.modelFactory(modelFactory)
+				.adapterManager(adapterManager)
+				.objectMapper(mapper)
+				.metricsService(metricsService)
+				.enableReverseMapping(enableReverseMapping)
+				.disableMapping(disableMapping)
+				.mangleNameSpaces(mangleNameSpaces)
+				.build();
 		try {
 			initialized = false;
 			initializeScripts();
-			int minEngineCount = PropertiesUtil.toInteger(context.getProperties().get(PROPERTY_POOL_MIN_SIZE), 5);
+			int minEngineCount = ctxPropHelper.toInteger(PROPERTY_POOL_MIN_SIZE, 5);
 			initializeEngines(pool, minEngineCount);
 		} catch (Exception e) {
-			LOGGER.info("cannot load and listen to script on initialize. will try again later", e);
+			LOG.info("cannot load and listen to script on initialize. will try again later", e);
 		}
 	}
 
@@ -252,14 +307,11 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	}
 
 	private void startListener() {
-		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory,
-				new JcrResourceChangeListener.Listener() {
-					@Override
-					public void changed(String script) {
-						createScripts();
-					}
-
-				}, subServiceName);
+		this.listener = new JcrResourceChangeListener(
+				repositoryConnectionFactory,
+				script -> createScripts(),
+				subServiceName
+		);
 		this.listener.activate(scriptResources);
 	}
 
@@ -276,8 +328,10 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.listener.deactivate();
 	}
 
-	protected ObjectPool<JavascriptEngine> createPool(int poolTotalSize,
-			JavacriptEnginePoolFactory javacriptEnginePoolFactory) {
+	protected ObjectPool<JavascriptEngine> createPool(
+			int poolTotalSize,
+			JavacriptEnginePoolFactory javacriptEnginePoolFactory
+	) {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(poolTotalSize);
 		config.setMaxIdle(poolTotalSize);
@@ -287,7 +341,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		config.setBlockWhenExhausted(true);
 		config.setMaxWaitMillis(10000);
 		config.setJmxEnabled(true);
-		return new GenericObjectPool<JavascriptEngine>(javacriptEnginePoolFactory, config);
+		return new GenericObjectPool<>(javacriptEnginePoolFactory, config);
 	}
 
 	@Override

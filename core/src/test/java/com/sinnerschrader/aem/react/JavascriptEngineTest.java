@@ -47,7 +47,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling, null, false, null);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -64,7 +64,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling, null, false, null);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -81,7 +81,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testNoScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling, null, false, null);
 
 		List<HashedScript> scripts = setupScripts();
 
@@ -96,7 +96,7 @@ public class JavascriptEngineTest {
 
 	@Test
 	public void testMoreScriptsChanges() {
-		JavascriptEngine engine = new JavascriptEngine(loader, sling, null);
+		JavascriptEngine engine = new JavascriptEngine(loader, sling, null, false, null);
 
 		List<HashedScript> scripts = setupScripts();
 

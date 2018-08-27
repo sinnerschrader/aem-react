@@ -1,6 +1,5 @@
 package com.sinnerschrader.aem.react;
 
-import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -12,9 +11,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
@@ -27,13 +25,13 @@ import com.sinnerschrader.aem.react.metrics.MetricsHelper;
 import com.sinnerschrader.aem.react.node.NodeRenderer;
 
 /**
- *
  * This Javascript engine can render ReactJs component in nashorn.
  *
  * @author stemey
- *
  */
+@Slf4j
 public class JavascriptEngine {
+
 	private ScriptCollectionLoader loader;
 	private ScriptEngine engine;
 	private Map<String, String> scriptChecksums;
@@ -41,9 +39,9 @@ public class JavascriptEngine {
 	private Object sling;
 	private CqxHolder cqxHolder;
 	private ComponentCache cache;
-	private NodeRenderer nodeRenderer;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
+	private final boolean nodeRendererEnabled;
+	private final NodeRenderer nodeRenderer;
 
 	public static class Console {
 
@@ -52,43 +50,43 @@ public class JavascriptEngine {
 		}
 
 		public void debug(String statement, Object... args) {
-			LOGGER.debug(statement, args);
+			LOG.debug(statement, args);
 		}
 
 		public void debug(String statement, Object error) {
-			LOGGER.debug(statement, error);
+			LOG.debug(statement, error);
 		}
 
 		public void log(String statement) {
-			LOGGER.info(statement);
+			LOG.info(statement);
 		}
 
 		public void log(String statement, Object error) {
-			LOGGER.info(statement, error);
+			LOG.info(statement, error);
 		}
 
 		public void info(String statement) {
-			LOGGER.info(statement);
+			LOG.info(statement);
 		}
 
 		public void info(String statement, Object error) {
-			LOGGER.info(statement, error);
+			LOG.info(statement, error);
 		}
 
 		public void error(String statement) {
-			LOGGER.error(statement);
+			LOG.error(statement);
 		}
 
 		public void error(String statement, Object error) {
-			LOGGER.error(statement, error);
+			LOG.error(statement, error);
 		}
 
 		public void warn(String statement) {
-			LOGGER.warn(statement);
+			LOG.warn(statement);
 		}
 
 		public void warn(String statement, Object error) {
-			LOGGER.warn(statement, error);
+			LOG.warn(statement, error);
 		}
 
 		public void time(String name) {
@@ -103,31 +101,33 @@ public class JavascriptEngine {
 
 	public static class Print extends Writer {
 		@Override
-		public void write(char[] cbuf, int off, int len) throws IOException {
-			LOGGER.error(new String(cbuf, off, len));
+		public void write(char[] cbuf, int off, int len) {
+			LOG.error(new String(cbuf, off, len));
 		}
 
 		@Override
-		public void flush() throws IOException {
-
+		public void flush() {
 		}
 
 		@Override
-		public void close() throws IOException {
-
+		public void close() {
 		}
 	}
 
-	public JavascriptEngine(ScriptCollectionLoader loader, Object sling, ComponentCache cache) {
+	public JavascriptEngine(
+			ScriptCollectionLoader loader, Object sling, ComponentCache cache,
+			boolean nodeRendererEnabled, NodeRenderer nodeRenderer
+	) {
 		this.loader = loader;
 		this.sling = sling;
 		this.cache = cache;
+		this.nodeRendererEnabled = nodeRendererEnabled;
+		this.nodeRenderer = nodeRenderer;
 	}
 
 	/**
 	 * initialize this instance. creates a javascript engine and loads the
 	 * javascript files. Instances of this class are not thread-safe.
-	 *
 	 */
 	public void initialize() {
 		if (this.initialized) {
@@ -161,7 +161,7 @@ public class JavascriptEngine {
 				throw new TechnicalException("cannot eval library script", e);
 			}
 		}
-		LOGGER.debug("JavascriptEngine.loadJavascriptLibrary took: " + (System.currentTimeMillis() - start) + "ms");
+		LOG.debug("JavascriptEngine.loadJavascriptLibrary took: " + (System.currentTimeMillis() - start) + "ms");
 	}
 
 	/**
@@ -184,8 +184,8 @@ public class JavascriptEngine {
 		return cache.cache(new CacheKey(path, resourceType, wcmmode, renderAsJson, selectors), request, path,
 				resourceType, (Object cacheableModel) -> {
 
-					if (cacheableModel != null && nodeRenderer.supports(resourceType)) {
-						return nodeRenderer.render(path, resourceType, wcmmode, selectors.toArray(new String[selectors.size()]), cacheableModel);
+					if (cacheableModel != null && nodeRendererEnabled && nodeRenderer.supports(resourceType)) {
+						return nodeRenderer.render(path, resourceType, wcmmode, selectors.toArray(new String[0]), cacheableModel);
 					}
 
 					Invocable invocable = ((Invocable) engine);
