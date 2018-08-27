@@ -28,6 +28,7 @@
         <module>core</module>
         <module>generate-typescript-maven-plugin</module>
         <module>aem-react-api</module>
+        <module>jdk-nashorn-fragment</module>
     </modules>
 
     <scm>
@@ -63,6 +64,7 @@
         <sling.version>2.16.2</sling.version>
         <jackson.version>2.5.3</jackson.version>
     </properties>
+
     <build>
         <plugins>
             <plugin>
