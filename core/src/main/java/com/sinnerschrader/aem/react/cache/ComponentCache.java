@@ -90,7 +90,8 @@ public class ComponentCache {
 
 	public Object getModel(SlingHttpServletRequest request, String path, String resourceType) {
 		try {
-			return modelFactory.getModelFromRequest(request);
+			Object model =  modelFactory.getModelFromRequest(request);
+			return model;
 		} catch (ModelClassException e) {
 			return null;
 		}
@@ -160,7 +161,7 @@ public class ComponentCache {
 		return caching;
 	}
 
-	public RenderResult cache(CacheKey key, SlingHttpServletRequest request, String path, String resourceType,
+	public RenderResult cache(ModelCollector collector, CacheKey key, SlingHttpServletRequest request, String path, String resourceType,
 			ResultRenderer render) throws Exception {
 		Object cacheableModel = null;
 		if (caching) {
@@ -168,6 +169,7 @@ public class ComponentCache {
 			try {
 				cacheableModel = getModel(request, path, resourceType);
 				if (cacheableModel != null) {
+					collector.addRequestModel(path, cacheableModel);
 					CachedHtml cachedHtml = getHtml(key, cacheableModel);
 					if (cachedHtml != null) {
 

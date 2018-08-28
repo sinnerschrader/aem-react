@@ -3,14 +3,12 @@ package com.sinnerschrader.aem.react;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -37,10 +35,12 @@ import com.sinnerschrader.aem.react.api.OsgiServiceFinder;
 import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.cache.CacheKey;
 import com.sinnerschrader.aem.react.cache.ComponentCache;
+import com.sinnerschrader.aem.react.cache.ModelCollector;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ReactSlingHttpServletRequestWrapper;
 import com.sinnerschrader.aem.react.json.ResourceMapper;
 import com.sinnerschrader.aem.react.json.ResourceMapperLocator;
+import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.mapping.ResourceResolverHelperFactory;
 import com.sinnerschrader.aem.react.mapping.ResourceResolverUtils;
 import com.sinnerschrader.aem.react.metrics.ComponentMetrics;
@@ -257,12 +257,12 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		return allHtml;
 	}
 
-	protected Cqx createCqx(ScriptContext ctx) {
+	protected Cqx createCqx(ModelCollector modelCollector, ScriptContext ctx) {
 		SlingHttpServletRequest request = (SlingHttpServletRequest) getBindings(ctx).get(SlingBindings.REQUEST);
 		SlingScriptHelper sling = (SlingScriptHelper) getBindings(ctx).get(SlingBindings.SLING);
 
 		ClassLoader classLoader = dynamicClassLoaderManager.getDynamicClassLoader();
-		ModelFactory reactModelFactory = new ModelFactory(classLoader, request, modelFactory, adapterManager, mapper,
+		ModelFactory reactModelFactory = new ModelFactory(modelCollector, classLoader, request, modelFactory, adapterManager, mapper,
 				request.getResourceResolver());
 		return new Cqx(new Sling(ctx), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
 	}
@@ -284,7 +284,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors)
 			throws Exception {
 		SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
-		return cache.cache(new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
+		final ModelCollector collector= new ModelCollector();
+		return cache.cache(collector, new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
 				mappedPath, resourceType, () -> {
 
 					return poolManager.execute((ReactRenderEngine engine) -> {
@@ -294,7 +295,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 							ResourceMapper resourceMapper = new ResourceMapper(request);
 							removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
 							return engine.render(mappedPath, resourceType, rootNo, wcmmode,
-									createCqx(scriptContext), renderAsJson, selectors);
+									createCqx(collector, scriptContext), renderAsJson, selectors);
 						} catch (Exception e) {
 							throw new TechnicalException("error rendering react markup", e);
 						} finally {

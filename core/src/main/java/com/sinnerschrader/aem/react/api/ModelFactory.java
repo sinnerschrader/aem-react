@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sinnerschrader.aem.react.cache.ModelCollector;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
 
 /**
@@ -123,7 +124,9 @@ public class ModelFactory {
 
 	private ObjectMapper mapper;
 
-	public ModelFactory(ClassLoader classLoader, SlingHttpServletRequest request,
+	private ModelCollector modelCollector;
+
+	public ModelFactory(ModelCollector modelCollector, ClassLoader classLoader, SlingHttpServletRequest request,
 			org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
 			ObjectMapper mapper, ResourceResolver resourceResolver) {
 		super();
@@ -133,6 +136,7 @@ public class ModelFactory {
 		this.adapterManager = adapterManager;
 		this.mapper = mapper;
 		this.resourceResolver = resourceResolver;
+		this.modelCollector = modelCollector;
 	}
 
 	private ResourceResolver resourceResolver;
@@ -158,9 +162,35 @@ public class ModelFactory {
 	 */
 	public JsProxy createRequestModel(String path, String className) {
 
+		JsProxy proxy = getCachedModel(path, className);
+		if (proxy != null) {
+			return proxy;
+		}
+
 		SlingHttpServletRequestWrapper newRequest = createReuest(path);
 
 		return createModel(className, newRequest);
+	}
+
+	private JsProxy getCachedModel(String path, String className) {
+		Object model = modelCollector.getModel(path, className);
+		if (model == null) {
+			return null;
+		}
+		Class<?> clazz = getModelClass(className);
+		LOGGER.debug("model already exists {} ", className);
+		return new JsProxy(model, clazz, mapper);
+	}
+
+	private Class<?> getModelClass(String className) {
+		Class<?> clazz;
+		try {
+			clazz = classLoader.loadClass(className);
+		} catch (ClassNotFoundException e) {
+			LOGGER.error("could not find model class " + className);
+			return null;
+		}
+		return clazz;
 	}
 
 	private SlingHttpServletRequestWrapper createReuest(String path) {
@@ -200,13 +230,7 @@ public class ModelFactory {
 
 	private JsProxy createModel(String className, Adaptable adaptable) {
 
-		Class<?> clazz;
-		try {
-			clazz = classLoader.loadClass(className);
-		} catch (ClassNotFoundException e) {
-			LOGGER.error("could not find model class " + className);
-			return null;
-		}
+		Class<?> clazz = getModelClass(className);
 		return MetricsHelper.getCurrent().timer("model", () -> {
 			Object object = modelFactory.createModel(adaptable, clazz);
 
