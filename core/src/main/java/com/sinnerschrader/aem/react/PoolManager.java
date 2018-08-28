@@ -13,8 +13,6 @@ public class PoolManager {
 
 	private JavascriptEngine jsEngine;
 
-	private ScriptCollectionLoader loader;
-
 	private LinkedBlockingQueue<ReactRenderEngine> renderer;
 
 	private ThreadLocal<ReactRenderEngine> localRenderer = new ThreadLocal<>();
@@ -26,7 +24,6 @@ public class PoolManager {
 	}
 
 	public PoolManager(ScriptCollectionLoader loader) {
-		this.loader = loader;
 		this.jsEngine = new JavascriptEngine(loader);
 		this.renderer = new LinkedBlockingQueue<>();
 	}
@@ -74,7 +71,7 @@ public class PoolManager {
 		if (renderer == null) {
 			renderer = new ReactRenderEngine(jsEngine.createBindings());
 			engineCount.incrementAndGet();
-			LOGGER.debug("pm: created new jse. Total is now: " + engineCount.get());
+			LOGGER.debug("pm: created new jse. Total is now: {}", engineCount.get());
 		}
 		return renderer;
 	}
