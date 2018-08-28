@@ -13,6 +13,9 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 @SuppressWarnings("PackageAccessibility")
@@ -22,11 +25,9 @@ public class JavascriptEngine {
     private final ScriptCollectionLoader loader;
     private final ScriptEngine engine;
     private final boolean reloadScriptOnChange;
-    private final Object scriptChangeSync = new Object();
 
-    private Map<String, String> scriptChecksums;
+    private final Map<String, String> scriptChecksums = new ConcurrentHashMap<>();
     private CompiledScript script;
-
 
     public static class Console {
 
@@ -111,17 +112,31 @@ public class JavascriptEngine {
     public void compileScript() {
         try {
             long start = System.currentTimeMillis();
-            String jsSource = "";
-            synchronized(scriptChangeSync) {
-                scriptChecksums = new HashMap<>();
-                Iterator<HashedScript> iterator = loader.iterator();
-                while (iterator.hasNext()) {
+            StringBuilder jsSource = new StringBuilder();
+            // we want only one compile to run
+            synchronized (scriptChecksums) {
+                boolean needsCompile = false;
+                final Map<String, String> tmp = new HashMap<>();
+                for (Iterator<HashedScript> iterator = loader.iterator(); iterator.hasNext(); ) {
                     HashedScript next = iterator.next();
-                    jsSource += next.getScript() + ";\n";
-                    scriptChecksums.put(next.getId(), next.getChecksum());
+                    jsSource.append(next.getScript());
+                    jsSource.append(";\n");
+                    String foundCheckSum = scriptChecksums.get(next.getId());
+                    needsCompile = needsCompile || foundCheckSum == null || !foundCheckSum.equals(next.getChecksum());
+                    tmp.put(next.getId(), next.getChecksum());
+                }
+                final Set<Map.Entry<String, String>> toDel = scriptChecksums.entrySet();
+                scriptChecksums.putAll(tmp);
+                // we need a unit test for this
+                toDel.iterator().forEachRemaining((Map.Entry<String, String> item) -> {
+                   if (tmp.get(item.getKey()) == null) {
+                       scriptChecksums.remove(item.getKey());
+                   }
+                });
+                if (needsCompile) {
+                    script = ((Compilable) engine).compile(jsSource.toString());
                 }
             }
-            script = ((Compilable) engine).compile(jsSource);
             LOGGER.debug("jse: compileScript took: {}ms", (System.currentTimeMillis() - start));
         } catch (ScriptException e) {
             LOGGER.error("jse: unable to initialize script", e);
@@ -148,19 +163,17 @@ public class JavascriptEngine {
             return false;
         }
 
-        synchronized(scriptChangeSync) {
-            Iterator<HashedScript> iterator = loader.iterator();
-            if (!iterator.hasNext() && scriptChecksums.size() > 0) {
+        Iterator<HashedScript> iterator = loader.iterator();
+        if (!iterator.hasNext() && scriptChecksums.size() > 0) {
+            return true;
+        }
+        while (iterator.hasNext()) {
+            HashedScript my = iterator.next();
+            String checksum = scriptChecksums.get(my.getId());
+            if (checksum == null || !checksum.equals(my.getChecksum())) {
                 return true;
             }
-            while (iterator.hasNext()) {
-                HashedScript next = iterator.next();
-                String checksum = scriptChecksums.get(next.getId());
-                if (checksum == null || !checksum.equals(next.getChecksum())) {
-                    return true;
-                }
-            }
-            return false;
         }
+        return false;
     }
 }
