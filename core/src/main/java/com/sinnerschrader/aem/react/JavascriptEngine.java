@@ -139,7 +139,7 @@ public class JavascriptEngine {
             }
 
             script = ((Compilable) engine).compile(jsSource);
-            LOGGER.debug("jse: compileScript took: " + (System.currentTimeMillis() - start) + "ms");
+            LOGGER.debug("jse: compileScript took: {}ms", (System.currentTimeMillis() - start));
         } catch (ScriptException e) {
             LOGGER.error("jse: unable to initialize script", e);
             throw new TechnicalException("unable to initialize jse");
@@ -151,7 +151,7 @@ public class JavascriptEngine {
             long start = System.currentTimeMillis();
             Bindings bindings = script.getEngine().createBindings();
             script.eval(bindings);
-            LOGGER.debug("jse: warm up took: " + (System.currentTimeMillis() - start) + "ms");
+            LOGGER.debug("jse: create bindings took: {}ms", (System.currentTimeMillis() - start));
             return bindings;
         } catch (ScriptException e) {
             LOGGER.error("unable to create bindings", e);

@@ -26,22 +26,21 @@ public class ReactRenderEngine {
         long startTime = System.currentTimeMillis();
 
         try {
-            long start;
-
-            start = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
             final ScriptObjectMirror aemGlobal = (ScriptObjectMirror) bindings.get("AemGlobal");
             ScriptObjectMirror mirror = (ScriptObjectMirror) aemGlobal.get("renderReactComponent");
-            LOGGER.debug("rre: get renderReactComponent took: " + (System.currentTimeMillis() - start) + "ms");
+            LOGGER.debug("rre: get renderReactComponent took: {}ms", (System.currentTimeMillis() - start));
 
             start = System.currentTimeMillis();
             Object value = mirror.call(null, path, resourceType, String.valueOf(rootNo), wcmmode,
                     renderAsJson, selectors.toArray(new String[selectors.size()]), cqx);
-            LOGGER.debug("rre: call renderReactComponent took: " + (System.currentTimeMillis() - start) + "ms");
+            LOGGER.debug("rre: call renderReactComponent took: {}ms", (System.currentTimeMillis() - start));
 
             ReactScriptEngine.RenderResult result = new ReactScriptEngine.RenderResult();
             result.html = (String) ((Map<String, Object>) value).get("html");
             result.cache = ((Map<String, Object>) value).get("state").toString();
-            LOGGER.debug("rre: render took: " + (System.currentTimeMillis() - startTime) + "ms");
+
+            LOGGER.debug("rre: render took: {}ms", (System.currentTimeMillis() - startTime));
             return result;
         } catch (Exception e) {
             LOGGER.error("error", e);
