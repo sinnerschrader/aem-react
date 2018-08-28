@@ -17,6 +17,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sinnerschrader.aem.react.cache.ModelCollector;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ModelFactoryTest {
@@ -60,6 +61,8 @@ public class ModelFactoryTest {
 	@Mock
 	private ObjectMapper mapper;
 	@Mock
+	private ModelCollector modelCollector;
+	@Mock
 	private ResourceResolver resourceResolver;
 
 	@Test
@@ -76,7 +79,7 @@ public class ModelFactoryTest {
 							.getConstructor(new Class[] { SlingHttpServletRequest.class })
 							.newInstance(invoke.getArguments()[0]);
 				});
-		ModelFactory factory = new ModelFactory(getClass().getClassLoader(), context.request(), modelFactory,
+		ModelFactory factory = new ModelFactory(modelCollector,getClass().getClassLoader(), context.request(), modelFactory,
 				adapterManager, new ObjectMapper(), context.resourceResolver());
 
 		JsProxy model = factory.createRequestModel("/test", TestModel.class.getName());
@@ -95,7 +98,7 @@ public class ModelFactoryTest {
 					return ((Class) invoke.getArguments()[1]).getConstructor(new Class[] { Resource.class })
 							.newInstance(invoke.getArguments()[0]);
 				});
-		ModelFactory factory = new ModelFactory(getClass().getClassLoader(), context.request(), modelFactory,
+		ModelFactory factory = new ModelFactory(modelCollector,getClass().getClassLoader(), context.request(), modelFactory,
 				adapterManager, new ObjectMapper(), context.resourceResolver());
 
 		JsProxy model = factory.createResourceModel("/test", TestModel.class.getName());
