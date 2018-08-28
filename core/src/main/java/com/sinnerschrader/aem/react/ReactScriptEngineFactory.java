@@ -65,7 +65,8 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ENABLE_REVERSE_MAPPING, label = "incoming sling mapping is not supported", description = "If the incoming sling mapping is not supported, then this optioen will make sure aem react works as expected", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MAPPING_DISABLE, label = "Disable sling mapping in react completely", description = "check this option to disable sling mapping in aem react.", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MANGLE_NAMESPACES, label = "mangles namespaces", description = "tell aemr eact how slingmapping handles namespace mangling.", boolValue = true), //
-		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = "") //
+		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = ""), //
+        @Property(name = ReactScriptEngineFactory.RELOAD_SCRIPT_ON_CHANGE, label = "reload scripts on change", value = "false") //
 })
 public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
@@ -83,6 +84,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public static final String PROPERTY_MANGLE_NAMESPACES = "mapping.mangle.namespaces";
 	public static final String JSON_RESOURCEMAPPING_INCLUDE_PATTERN = "json.resourcemapping.include.pattern";
 	public static final String JSON_RESOURCEMAPPING_EXCLUDE_PATTERN = "json.resourcemapping.exclude.pattern";
+	public static final String RELOAD_SCRIPT_ON_CHANGE = "js.reload.on.change";
 
 	@Reference
 	private ServletResolver servletResolver;
@@ -122,6 +124,7 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	private RepositoryConnectionFactory repositoryConnectionFactory;
 	private boolean disableMapping;
 	private boolean enableReverseMapping;
+    private boolean reloadScriptOnChange;
 
 	private boolean initialized = false;
 
@@ -222,13 +225,15 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
 
+		this.reloadScriptOnChange = PropertiesUtil.toBoolean(context.getProperties().get(RELOAD_SCRIPT_ON_CHANGE), false);
+
 		try {
 			initialized = false;
 			initializeScripts();
 
 			this.engine = new ReactScriptEngine(this, loader, finder, dynamicClassLoaderManager, rootElementName,
 					rootElementClassName, modelFactory, adapterManager, mapper, metricsService, enableReverseMapping,
-					disableMapping, mangleNameSpaces, cache);
+					disableMapping, mangleNameSpaces, cache, reloadScriptOnChange);
 		} catch (Exception e) {
 			LOGGER.info("cannot load and listen to script on initialize. will try again later", e);
 		}
@@ -239,19 +244,14 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 			return;
 		}
 		this.createScripts();
-		startListener();
+		if (reloadScriptOnChange) {
+            startListener();
+        }
 		this.initialized = true;
 	}
 
 	private void startListener() {
-		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory,
-				new JcrResourceChangeListener.Listener() {
-					@Override
-					public void changed(String script) {
-						createScripts();
-					}
-
-				}, subServiceName);
+		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory, script -> createScripts(), subServiceName);
 		this.listener.activate(scriptResources);
 	}
 
@@ -263,6 +263,10 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	@Deactivate
 	public void stop() throws RepositoryException {
+        if (!reloadScriptOnChange) {
+            return;
+        }
+
 		initialized = false;
 		this.engine.stop();
 		this.listener.deactivate();

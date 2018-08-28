@@ -21,9 +21,12 @@ public class JavascriptEngine {
 
     private final ScriptCollectionLoader loader;
     private final ScriptEngine engine;
+    private final boolean reloadScriptOnChange;
+    private final Object scriptChangeSync = new Object();
 
     private Map<String, String> scriptChecksums;
     private CompiledScript script;
+
 
     public static class Console {
 
@@ -97,25 +100,27 @@ public class JavascriptEngine {
         }
     }
 
-    public JavascriptEngine(ScriptCollectionLoader loader) {
+    public JavascriptEngine(ScriptCollectionLoader loader, boolean reloadScriptOnChange) {
         this.loader = loader;
         engine = new ScriptEngineManager(null).getEngineByName("nashorn");
         engine.getContext().setErrorWriter(new Print());
         engine.getContext().setWriter(new Print());
+        this.reloadScriptOnChange = reloadScriptOnChange;
     }
 
     public void compileScript() {
         try {
             long start = System.currentTimeMillis();
-            scriptChecksums = new HashMap<>();
-            Iterator<HashedScript> iterator = loader.iterator();
             String jsSource = "";
-            while (iterator.hasNext()) {
-                HashedScript next = iterator.next();
-                jsSource += next.getScript() + ";\n";
-                scriptChecksums.put(next.getId(), next.getChecksum());
+            synchronized(scriptChangeSync) {
+                scriptChecksums = new HashMap<>();
+                Iterator<HashedScript> iterator = loader.iterator();
+                while (iterator.hasNext()) {
+                    HashedScript next = iterator.next();
+                    jsSource += next.getScript() + ";\n";
+                    scriptChecksums.put(next.getId(), next.getChecksum());
+                }
             }
-
             script = ((Compilable) engine).compile(jsSource);
             LOGGER.debug("jse: compileScript took: {}ms", (System.currentTimeMillis() - start));
         } catch (ScriptException e) {
@@ -139,17 +144,23 @@ public class JavascriptEngine {
     }
 
     public boolean isScriptsChanged() {
-        Iterator<HashedScript> iterator = loader.iterator();
-        if (!iterator.hasNext() && scriptChecksums.size() > 0) {
-            return true;
+        if (!reloadScriptOnChange) {
+            return false;
         }
-        while (iterator.hasNext()) {
-            HashedScript next = iterator.next();
-            String checksum = scriptChecksums.get(next.getId());
-            if (checksum == null || !checksum.equals(next.getChecksum())) {
+
+        synchronized(scriptChangeSync) {
+            Iterator<HashedScript> iterator = loader.iterator();
+            if (!iterator.hasNext() && scriptChecksums.size() > 0) {
                 return true;
             }
+            while (iterator.hasNext()) {
+                HashedScript next = iterator.next();
+                String checksum = scriptChecksums.get(next.getId());
+                if (checksum == null || !checksum.equals(next.getChecksum())) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return false;
     }
 }
