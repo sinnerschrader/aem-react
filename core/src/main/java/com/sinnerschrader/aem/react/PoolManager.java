@@ -11,9 +11,9 @@ public class PoolManager {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PoolManager.class);
 
-	private JavascriptEngine jsEngine;
+	private final JavascriptEngine jsEngine;
 
-	private LinkedBlockingQueue<ReactRenderEngine> renderer;
+	private final LinkedBlockingQueue<ReactRenderEngine> renderer;
 
 	private ThreadLocal<ReactRenderEngine> localRenderer = new ThreadLocal<>();
 
@@ -26,6 +26,7 @@ public class PoolManager {
 	public PoolManager(ScriptCollectionLoader loader) {
 		this.jsEngine = new JavascriptEngine(loader);
 		this.renderer = new LinkedBlockingQueue<>();
+		jsEngine.compileScript();
 	}
 
 	public void close() {
@@ -37,8 +38,6 @@ public class PoolManager {
 	}
 
 	public <T> T execute(EngineUser<T> processor) throws Exception {
-		jsEngine.initialize();
-
 		return JsExecutionStack.execute((int level) -> {
 			ReactRenderEngine renderEngine = localRenderer.get();
 			try {

@@ -19,10 +19,10 @@ import java.util.Map;
 public class JavascriptEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
-    private ScriptEngine engine;
-    private ScriptCollectionLoader loader;
+    private final ScriptCollectionLoader loader;
+    private final ScriptEngine engine;
+
     private Map<String, String> scriptChecksums;
-    private boolean initialized = false;
     private CompiledScript script;
 
     public static class Console {
@@ -99,31 +99,9 @@ public class JavascriptEngine {
 
     public JavascriptEngine(ScriptCollectionLoader loader) {
         this.loader = loader;
-    }
-
-    /**
-     * initialize this instance. creates a javascript engine and loads the
-     * javascript files.
-     *
-     * This needs only be done once, thus the method os synchronized
-     */
-    public synchronized void initialize() throws TechnicalException {
-        if(this.initialized) {
-            return;
-        }
-
-        initEngine();
-        compileScript();
-        
-        this.initialized = true;
-    }
-
-    private void initEngine() {
-        ScriptEngineManager scriptEngineManager = new ScriptEngineManager(null);
-        engine = scriptEngineManager.getEngineByName("nashorn");
+        engine = new ScriptEngineManager(null).getEngineByName("nashorn");
         engine.getContext().setErrorWriter(new Print());
         engine.getContext().setWriter(new Print());
-        engine.getBindings(ScriptContext.GLOBAL_SCOPE).put("console", new Console());
     }
 
     public void compileScript() {
@@ -148,8 +126,9 @@ public class JavascriptEngine {
 
     public Bindings createBindings() {
         try {
-            long start = System.currentTimeMillis();
-            Bindings bindings = script.getEngine().createBindings();
+            final long start = System.currentTimeMillis();
+            final Bindings bindings = script.getEngine().createBindings();
+            bindings.put("console", new Console());
             script.eval(bindings);
             LOGGER.debug("jse: create bindings took: {}ms", (System.currentTimeMillis() - start));
             return bindings;
