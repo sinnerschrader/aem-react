@@ -287,7 +287,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		return cache.cache(new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
 				mappedPath, resourceType, () -> {
 
-					return poolManager.execute((JavascriptEngine engine) -> {
+					return poolManager.execute((ReactRenderEngine engine) -> {
 
 						boolean removeMapper = false;
 						try {
