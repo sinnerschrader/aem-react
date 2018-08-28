@@ -113,11 +113,6 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
-
-
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -160,9 +155,6 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -199,9 +191,6 @@ public class ReactScriptEngineTest {
 
 		slingContext.request().setQueryString("serverRendering=disabled");
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -258,13 +247,6 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(true), Matchers.eq(new ArrayList() {
-					{
-						add("json");
-					}
-				}))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -290,13 +272,6 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(true), Matchers.eq(new ArrayList() {
-					{
-						add("json");
-					}
-				}))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();
@@ -322,9 +297,6 @@ public class ReactScriptEngineTest {
 		Resource resource = slingContext.create().resource(path, "sling:resourceType", resourceType);
 		slingContext.currentResource(resource);
 
-		Mockito.when(engine.render(Matchers.eq(path),
-				Matchers.eq(resourceType), Matchers.eq(1), Matchers.eq("disabled"), Mockito.anyObject(),
-				Matchers.eq(false), Matchers.eq(new ArrayList<>()))).thenReturn(result);
 		RenderResult renderResult = (RenderResult) r.eval(new StringReader(""), scriptContext);
 		Assert.assertNull(renderResult);
 		String renderedHtml = getRenderedHtml();

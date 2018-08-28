@@ -1,35 +1,29 @@
 package com.sinnerschrader.aem.react;
 
-import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
-import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.*;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-/**
- *
- * This Javascript engine can render ReactJs component in nashorn.
- *
- */
+
 @SuppressWarnings("PackageAccessibility")
 public class JavascriptEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
-    private static ScriptEngine engine;
-
+    private ScriptEngine engine;
     private ScriptCollectionLoader loader;
     private Map<String, String> scriptChecksums;
     private boolean initialized = false;
-    private CompiledScript compiledScript;
+    private CompiledScript script;
 
     public static class Console {
 
@@ -113,35 +107,18 @@ public class JavascriptEngine {
      *
      * This needs only be done once, thus the method os synchronized
      */
-    public synchronized void initialize(boolean forceInitialization) throws TechnicalException {
-        if(this.initialized && !forceInitialization) {
+    public synchronized void initialize() throws TechnicalException {
+        if(this.initialized) {
             return;
         }
 
-        initScriptEngine();
-
-        try {
-            long start = System.currentTimeMillis();
-            compiledScript = compileScript();
-            LOGGER.debug("jse: compileScript took: " + (System.currentTimeMillis() - start) + "ms");
-
-            start = System.currentTimeMillis();
-            Bindings bindings = compiledScript.getEngine().createBindings();
-            compiledScript.eval(bindings);
-            LOGGER.debug("jse: warm up took: " + (System.currentTimeMillis() - start) + "ms");
-
-            this.initialized = true;
-        } catch (ScriptException e) {
-            LOGGER.error("jse: unable to initialize script", e);
-            throw new TechnicalException("unable to initialize jse");
-        }
+        initEngine();
+        compileScript();
+        
+        this.initialized = true;
     }
 
-    private void initScriptEngine() {
-        if (engine != null) {
-            return;
-        }
-
+    private void initEngine() {
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager(null);
         engine = scriptEngineManager.getEngineByName("nashorn");
         engine.getContext().setErrorWriter(new Print());
@@ -149,66 +126,37 @@ public class JavascriptEngine {
         engine.getBindings(ScriptContext.GLOBAL_SCOPE).put("console", new Console());
     }
 
-    private CompiledScript compileScript() throws ScriptException {
-        scriptChecksums = new HashMap<>();
-        Iterator<HashedScript> iterator = loader.iterator();
-        String script = "";
-        while (iterator.hasNext()) {
-            HashedScript next = iterator.next();
-            script += next.getScript() + ";\n";
-            scriptChecksums.put(next.getId(), next.getChecksum());
-        }
-
-        return ((Compilable) engine).compile(script);
-    }
-
-    /**
-     * render the given react component
-     * @return
-     */
-    public RenderResult render(String path, String resourceType, int rootNo, String wcmmode, Cqx cqx, boolean renderAsJson,
-                               List<String> selectors) {
-
-        long startTime = System.currentTimeMillis();
-
-        if(!this.initialized) {
-            throw new IllegalStateException("jse: not initialized");
-        }
-
+    public void compileScript() {
         try {
-            long start;
+            long start = System.currentTimeMillis();
+            scriptChecksums = new HashMap<>();
+            Iterator<HashedScript> iterator = loader.iterator();
+            String jsSource = "";
+            while (iterator.hasNext()) {
+                HashedScript next = iterator.next();
+                jsSource += next.getScript() + ";\n";
+                scriptChecksums.put(next.getId(), next.getChecksum());
+            }
 
-            start = System.currentTimeMillis();
-            Bindings bindings = compiledScript.getEngine().createBindings();
-            LOGGER.debug("jse: create bindings: " + (System.currentTimeMillis() - start) + "ms");
-
-            start = System.currentTimeMillis();
-            compiledScript.eval(bindings);
-            LOGGER.debug("jse: eval bindings " + (System.currentTimeMillis() - start) + "ms");
-
-            start = System.currentTimeMillis();
-            final ScriptObjectMirror aemGlobal = (ScriptObjectMirror) bindings.get("AemGlobal");
-            ScriptObjectMirror mirror = (ScriptObjectMirror) aemGlobal.get("renderReactComponent");
-            LOGGER.debug("jse: get renderReactComponent " + (System.currentTimeMillis() - start) + "ms");
-
-            start = System.currentTimeMillis();
-            Object value = mirror.call(null, path, resourceType, String.valueOf(rootNo), wcmmode,
-                    renderAsJson, selectors.toArray(new String[selectors.size()]), cqx);
-            LOGGER.debug("jse: call renderReactComponent " + (System.currentTimeMillis() - start) + "ms");
-
-            RenderResult result = new RenderResult();
-            result.html = (String) ((Map<String, Object>) value).get("html");
-            result.cache = ((Map<String, Object>) value).get("state").toString();
-            LOGGER.debug("jse: render took: " + (System.currentTimeMillis() - startTime) + "ms");
-            return result;
-        } catch (Exception e) {
-            LOGGER.error("error", e);
-            throw new TechnicalException("cannot render react on server", e);
+            script = ((Compilable) engine).compile(jsSource);
+            LOGGER.debug("jse: compileScript took: " + (System.currentTimeMillis() - start) + "ms");
+        } catch (ScriptException e) {
+            LOGGER.error("jse: unable to initialize script", e);
+            throw new TechnicalException("unable to initialize jse");
         }
     }
 
-    public ScriptEngine getEngine() {
-        return engine;
+    public Bindings createBindings() {
+        try {
+            long start = System.currentTimeMillis();
+            Bindings bindings = script.getEngine().createBindings();
+            script.eval(bindings);
+            LOGGER.debug("jse: warm up took: " + (System.currentTimeMillis() - start) + "ms");
+            return bindings;
+        } catch (ScriptException e) {
+            LOGGER.error("unable to create bindings", e);
+            throw new TechnicalException("unable to create bindings");
+        }
     }
 
     public boolean isScriptsChanged() {
@@ -225,5 +173,4 @@ public class JavascriptEngine {
         }
         return false;
     }
-
 }
