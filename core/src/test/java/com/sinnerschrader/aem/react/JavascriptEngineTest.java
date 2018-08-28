@@ -96,13 +96,13 @@ public class JavascriptEngineTest {
 
 		// check that checksum means it is changed
 		scripts.clear();
-		HashedScript scriptv3 = new HashedScript("1", "", "1");
-		HashedScript scriptv4 = new HashedScript("2", "", "1");
+		HashedScript scriptv3 = new HashedScript("42", "", "42");
+		HashedScript scriptv4 = new HashedScript("1337", "", "1337");
 		scripts.add(scriptv3);
 		scripts.add(scriptv4);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		Assert.assertTrue(engine.isScriptsChanged());
 
+		Assert.assertTrue(engine.isScriptsChanged());
 	}
 
 	private List<HashedScript> setupScripts() {

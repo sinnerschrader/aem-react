@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 @SuppressWarnings("PackageAccessibility")
@@ -127,10 +126,11 @@ public class JavascriptEngine {
                 }
                 final Set<Map.Entry<String, String>> toDel = scriptChecksums.entrySet();
                 scriptChecksums.putAll(tmp);
-                // we need a unit test for this
+
                 toDel.iterator().forEachRemaining((Map.Entry<String, String> item) -> {
                    if (tmp.get(item.getKey()) == null) {
                        scriptChecksums.remove(item.getKey());
+                       LOGGER.debug("jse: removed script: {}", item.getKey());
                    }
                 });
                 if (needsCompile) {
