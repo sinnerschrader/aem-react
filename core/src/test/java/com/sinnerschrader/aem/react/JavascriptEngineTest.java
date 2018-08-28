@@ -50,7 +50,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(true);
+		engine.initialize();
 
 		// check that only the checksum is relevant
 		scripts.clear();
@@ -67,7 +67,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(true);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -84,7 +84,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(true);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -99,7 +99,7 @@ public class JavascriptEngineTest {
 
 		List<HashedScript> scripts = setupScripts();
 
-		engine.initialize(true);
+		engine.initialize();
 
 		// check that checksum means it is changed
 		scripts.clear();
@@ -125,19 +125,21 @@ public class JavascriptEngineTest {
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine(loader);
+		JavascriptEngine jsEngine = new JavascriptEngine(loader);
 		List<HashedScript> scripts = new ArrayList<>();
 		HashedScript script = new HashedScript("1", js, "1");
 		scripts.add(script);
 		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		engine.initialize(true);
+		jsEngine.initialize();
+
+		ReactRenderEngine renderEngine = new ReactRenderEngine(jsEngine.createBindings());
 
 		List<String> selectors = new ArrayList() {
 			{
 				this.add("s1");
 			}
 		};
-		RenderResult result = engine.render("/content", "/apps/test", 1, "disabled", new MockCqx(), false,
+		RenderResult result = renderEngine.render("/content", "/apps/test", 1, "disabled", new MockCqx(), false,
 				selectors);
 		Assert.assertEquals("my html", result.html);
 		JsonNode tree = new ObjectMapper().readTree(result.cache);

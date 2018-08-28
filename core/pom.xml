@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.sinnerschrader.aem.react</groupId>
         <artifactId>aem-react</artifactId>
-        <version>0.24.2.7-SNAPSHOT</version>
+        <version>2018.8.28a-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>core</artifactId>
@@ -60,6 +60,7 @@
                             com.day.cq.wcm.api;version=!,
                             !sun.misc,
                             com.day.cq.wcm.api.components;version=!,
+                            !jdk.nashorn.api.*,
                             *
                         </Import-Package>
                         <Sling-Model-Packages />

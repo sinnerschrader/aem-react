@@ -11,25 +11,28 @@ public class PoolManager {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PoolManager.class);
 
+	private JavascriptEngine jsEngine;
+
 	private ScriptCollectionLoader loader;
 
-	private LinkedBlockingQueue<JavascriptEngine> engines;
+	private LinkedBlockingQueue<ReactRenderEngine> renderer;
 
-	private ThreadLocal<JavascriptEngine> localEngine = new ThreadLocal<>();
+	private ThreadLocal<ReactRenderEngine> localRenderer = new ThreadLocal<>();
 
 	private AtomicInteger engineCount = new AtomicInteger(0);
 
 	public interface EngineUser<T> {
-		T execute(JavascriptEngine engine) throws Exception;
+		T execute(ReactRenderEngine engine) throws Exception;
 	}
 
 	public PoolManager(ScriptCollectionLoader loader) {
 		this.loader = loader;
-		this.engines = new LinkedBlockingQueue<>();
+		this.jsEngine = new JavascriptEngine(loader);
+		this.renderer = new LinkedBlockingQueue<>();
 	}
 
 	public void close() {
-		engines.clear();
+		renderer.clear();
 	}
 
 	public int getEngineCount() {
@@ -37,40 +40,42 @@ public class PoolManager {
 	}
 
 	public <T> T execute(EngineUser<T> processor) throws Exception {
+		jsEngine.initialize();
+
 		return JsExecutionStack.execute((int level) -> {
-			JavascriptEngine engine = localEngine.get();
+			ReactRenderEngine renderEngine = localRenderer.get();
 			try {
-				if (level != 1 && engine == null) {
-					throw new IllegalStateException("engine is null, but is expected to be none null");
+				if (level != 1 && renderEngine == null) {
+					throw new IllegalStateException("renderer is null, but is expected to be none null");
 				}
 
-				if (engine == null) {
-					engine = getEngine();
-					localEngine.set(engine);
+				if (jsEngine.isScriptsChanged()) {
+					renderer.clear();
+					jsEngine.compileScript();
 				}
 
-				if (engine.isScriptsChanged()) {
-					engine.initialize(true);
+				if (renderEngine == null) {
+					renderEngine = getRenderer();
+					localRenderer.set(renderEngine);
 				}
 
-				return processor.execute(engine);
+				return processor.execute(renderEngine);
 			} finally {
-				if (level == 1 && engine != null) {
-					localEngine.remove();
-					engines.put(engine);
+				if (level == 1 && renderEngine != null) {
+					localRenderer.remove();
+					this.renderer.put(renderEngine);
 				}
 			}
 		});
 	}
 
-	private JavascriptEngine getEngine() {
-		JavascriptEngine engine = engines.poll();
-		if (engine == null) {
-			engine =  new JavascriptEngine(loader);
-			engine.initialize(false);
+	private ReactRenderEngine getRenderer() {
+		ReactRenderEngine renderer = this.renderer.poll();
+		if (renderer == null) {
+			renderer = new ReactRenderEngine(jsEngine.createBindings());
 			engineCount.incrementAndGet();
 			LOGGER.debug("pm: created new jse. Total is now: " + engineCount.get());
 		}
-		return engine;
+		return renderer;
 	}
 }
