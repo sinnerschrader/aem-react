@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.script.Bindings;
@@ -11,6 +12,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 
+import com.sinnerschrader.aem.react.loader.HashedScript;
 import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -54,19 +56,10 @@ public class ReactScriptEngineTest {
 	private ReactScriptEngineFactory factory;
 
 	@Mock
-	private ResourceResolver resourceResolver;
-
-	@Mock
 	private ClassLoader classLoader;
 
 	@Mock
 	private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-	@Mock
-	private SlingScriptHelper sling;
-
-	@Mock
-	private JavascriptEngine engine;
 
 	private ScriptContext scriptContext;
 
@@ -96,6 +89,11 @@ public class ReactScriptEngineTest {
 		bindings.put(SlingBindings.REQUEST, slingContext.request());
 		bindings.put(SlingBindings.RESPONSE, slingContext.response());
 		bindings.put(SlingBindings.SLING, slingContext.slingScriptHelper());
+
+		List<HashedScript> scripts = new ArrayList<>();
+		HashedScript script = new HashedScript("1", "", "1");
+		scripts.add(script);
+		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
 	}
 
 	@Test
@@ -103,7 +101,7 @@ public class ReactScriptEngineTest {
 	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, false, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		RenderResult result = expectResult();
 
@@ -145,7 +143,7 @@ public class ReactScriptEngineTest {
 	public void testEvalDisableMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		RenderResult result = expectResult();
 
@@ -179,7 +177,7 @@ public class ReactScriptEngineTest {
 	public void testEvalServerRenderingDisabled() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		RenderResult result = expectResult();
 
@@ -213,7 +211,7 @@ public class ReactScriptEngineTest {
 	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -235,7 +233,7 @@ public class ReactScriptEngineTest {
 	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader,null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		slingContext.requestPathInfo().setSelectorString("json");
 
@@ -259,7 +257,7 @@ public class ReactScriptEngineTest {
 	public void testEvalJsonOnlyNoServerRendering() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		slingContext.requestPathInfo().setSelectorString("json");
 		slingContext.request().setQueryString("serverRendering=disabled");
@@ -287,7 +285,7 @@ public class ReactScriptEngineTest {
 	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), true, false, false,
-				new ComponentCache(null, null, 0, 0, null, false));
+				new ComponentCache(null, null, 0, 0, null, false), true);
 
 		RenderResult result = expectResult();
 

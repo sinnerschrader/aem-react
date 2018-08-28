@@ -23,8 +23,8 @@ public class PoolManager {
 		T execute(ReactRenderEngine engine) throws Exception;
 	}
 
-	public PoolManager(ScriptCollectionLoader loader) {
-		this.jsEngine = new JavascriptEngine(loader);
+	public PoolManager(ScriptCollectionLoader loader, boolean reloadScriptOnChange) {
+		this.jsEngine = new JavascriptEngine(loader, reloadScriptOnChange);
 		this.renderer = new LinkedBlockingQueue<>();
 		jsEngine.compileScript();
 	}
@@ -70,7 +70,7 @@ public class PoolManager {
 		if (renderer == null) {
 			renderer = new ReactRenderEngine(jsEngine.createBindings());
 			engineCount.incrementAndGet();
-			LOGGER.debug("pm: created new jse. Total is now: {}", engineCount.get());
+			LOGGER.debug("pm: created new rre. Total is now: {}", engineCount.get());
 		}
 		return renderer;
 	}

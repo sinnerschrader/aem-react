@@ -89,10 +89,10 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 								DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
 								org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
 								ObjectMapper mapper, ComponentMetricsService metricsService, boolean enableReverseMapping,
-								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
+								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache, boolean reloadScriptOnChange) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
-		this.poolManager = new PoolManager(loader);
+		this.poolManager = new PoolManager(loader, reloadScriptOnChange);
 		this.finder = finder;
 		this.dynamicClassLoaderManager = dynamicClassLoaderManager;
 		this.rootElementName = rootElementName;

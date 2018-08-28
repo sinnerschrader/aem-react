@@ -204,12 +204,11 @@ public class IntegrationTest {
 				Mockito.any(SlingHttpServletResponse.class));
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		ScriptContext scriptContext = new SimpleScriptContext();
-		JavascriptEngine jsEngine = new JavascriptEngine(loader);
-		jsEngine.initialize();
+		JavascriptEngine jsEngine = new JavascriptEngine(loader, true);
 
 		ReactScriptEngine r = new ReactScriptEngine(factory, loader,null, dynamicClassLoaderManager,
 				"span", "test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false,
-				mockCache);
+				mockCache, true);
 		ClassLoader classLoader = this.getClass().getClassLoader();
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		Mockito.when(dynamicClassLoaderManager.getDynamicClassLoader()).thenReturn(classLoader);
