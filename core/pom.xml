@@ -60,7 +60,7 @@
                             com.day.cq.wcm.api;version=!,
                             !sun.misc,
                             com.day.cq.wcm.api.components;version=!,
-                            !jdk.nashorn.api.*,
+                            jdk.nashorn.api.scripting,
                             *
                         </Import-Package>
                         <Sling-Model-Packages />
