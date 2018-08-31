@@ -1,11 +1,12 @@
 package com.sinnerschrader.aem.react;
 
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 
 public class PoolManager {
 
@@ -26,7 +27,6 @@ public class PoolManager {
 	public PoolManager(ScriptCollectionLoader loader, boolean reloadScriptOnChange) {
 		this.jsEngine = new JavascriptEngine(loader, reloadScriptOnChange);
 		this.renderer = new LinkedBlockingQueue<>();
-		jsEngine.compileScript();
 	}
 
 	public void close() {
@@ -38,6 +38,7 @@ public class PoolManager {
 	}
 
 	public <T> T execute(EngineUser<T> processor) throws Exception {
+		jsEngine.tryCompileScript();
 		return JsExecutionStack.execute((int level) -> {
 			ReactRenderEngine renderEngine = localRenderer.get();
 			try {
@@ -63,6 +64,7 @@ public class PoolManager {
 				}
 			}
 		});
+
 	}
 
 	private ReactRenderEngine getRenderer() {

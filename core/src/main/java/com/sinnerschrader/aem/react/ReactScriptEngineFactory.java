@@ -227,9 +227,10 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
 
 		this.reloadScriptOnChange = true;
-		// TODO for now we must observe changes, because this engine might be started before the javascript is deployed.
+		// TODO for now we must observe changes, because this engine might be started
+		// before the javascript is deployed.
 		// PropertiesUtil.toBoolean(context.getProperties().get(RELOAD_SCRIPT_ON_CHANGE),
-											// false);
+		// false);
 
 		try {
 			initialized = false;
@@ -270,7 +271,9 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	public void stop() throws RepositoryException {
 
 		initialized = false;
-		this.engine.stop();
+		if (this.engine != null) {
+			this.engine.stop();
+		}
 		if (reloadScriptOnChange) {
 			this.listener.deactivate();
 		}
