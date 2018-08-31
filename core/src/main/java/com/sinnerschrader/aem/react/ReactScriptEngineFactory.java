@@ -58,7 +58,7 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_SUBSERVICENAME, label = "the subservicename for accessing the script resources. If it is null then the deprecated system admin will be used.", value = ""), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_SIZE, label = "component cache max size", longValue = 2000), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_MAX_MINUTES, label = "component cache max minutes", longValue = 10), //
-		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue=false), //
+		@Property(name = ReactScriptEngineFactory.PROPERTY_CACHE_DEBUG, label = "debug cache", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_ELEMENT_NAME, label = "the root element name", value = "div"), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_ROOT_CLASS_NAME, label = "the root element class name", value = ""), //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_INCLUDE_PATTERN, label = "pattern for text properties in sling models that must be mapped by resource resolver", value = "^/content"), //
@@ -66,7 +66,7 @@ import com.sinnerschrader.aem.reactapi.json.CacheView;
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MAPPING_DISABLE, label = "Disable sling mapping in react completely", description = "check this option to disable sling mapping in aem react.", boolValue = false), //
 		@Property(name = ReactScriptEngineFactory.PROPERTY_MANGLE_NAMESPACES, label = "mangles namespaces", description = "tell aemr eact how slingmapping handles namespace mangling.", boolValue = true), //
 		@Property(name = ReactScriptEngineFactory.JSON_RESOURCEMAPPING_EXCLUDE_PATTERN, label = "pattern for text properties in sling models that must NOT be mapped by resource resolver", value = ""), //
-        @Property(name = ReactScriptEngineFactory.RELOAD_SCRIPT_ON_CHANGE, label = "reload scripts on change", value = "false") //
+		@Property(name = ReactScriptEngineFactory.RELOAD_SCRIPT_ON_CHANGE, label = "reload scripts on change", boolValue = true) //
 })
 public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
@@ -124,14 +124,14 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 	private RepositoryConnectionFactory repositoryConnectionFactory;
 	private boolean disableMapping;
 	private boolean enableReverseMapping;
-    private boolean reloadScriptOnChange;
+	private boolean reloadScriptOnChange;
 
 	private boolean initialized = false;
 
 	private ComponentCache cache;
 
 	public synchronized void createScripts() {
-		if (this.cache!=null) {
+		if (this.cache != null) {
 			this.cache.clear();
 		}
 		List<HashedScript> newScripts = new LinkedList<>();
@@ -221,11 +221,15 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 				: PropertiesUtil.toString(context.getProperties().get(JSON_RESOURCEMAPPING_EXCLUDE_PATTERN), null);
 
 		ObjectMapper mapper = new ObjectMapperFactory().create(includePattern, excludePattern);
-		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern).enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
+		ObjectWriter cacheWriter = new ObjectMapperFactory().create(includePattern, excludePattern)
+				.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).writerWithView(CacheView.class);
 
 		this.cache = new ComponentCache(modelFactory, cacheWriter, maxSize, maxMinutes, metricsService, debugCache);
 
-		this.reloadScriptOnChange = PropertiesUtil.toBoolean(context.getProperties().get(RELOAD_SCRIPT_ON_CHANGE), false);
+		this.reloadScriptOnChange = true;
+		// TODO for now we must observe changes, because this engine might be started before the javascript is deployed.
+		// PropertiesUtil.toBoolean(context.getProperties().get(RELOAD_SCRIPT_ON_CHANGE),
+											// false);
 
 		try {
 			initialized = false;
@@ -245,13 +249,14 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 		}
 		this.createScripts();
 		if (reloadScriptOnChange) {
-            startListener();
-        }
+			startListener();
+		}
 		this.initialized = true;
 	}
 
 	private void startListener() {
-		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory, script -> createScripts(), subServiceName);
+		this.listener = new JcrResourceChangeListener(repositoryConnectionFactory, script -> createScripts(),
+				subServiceName);
 		this.listener.activate(scriptResources);
 	}
 
@@ -263,13 +268,12 @@ public class ReactScriptEngineFactory extends AbstractScriptEngineFactory {
 
 	@Deactivate
 	public void stop() throws RepositoryException {
-        if (!reloadScriptOnChange) {
-            return;
-        }
 
 		initialized = false;
 		this.engine.stop();
-		this.listener.deactivate();
+		if (reloadScriptOnChange) {
+			this.listener.deactivate();
+		}
 	}
 
 	@Override
