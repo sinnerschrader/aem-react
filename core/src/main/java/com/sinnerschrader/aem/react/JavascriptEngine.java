@@ -2,11 +2,7 @@ package com.sinnerschrader.aem.react;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -19,19 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sinnerschrader.aem.react.exception.TechnicalException;
-import com.sinnerschrader.aem.react.loader.HashedScript;
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.metrics.MetricsHelper;
 
 @SuppressWarnings("PackageAccessibility")
 public class JavascriptEngine {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
-	private final ScriptCollectionLoader loader;
 	private final ScriptEngine engine;
-	private final boolean reloadScriptOnChange;
-
-	private final Map<String, String> scriptChecksums = new ConcurrentHashMap<>();
 	private CompiledScript script;
 
 	public static class Console {
@@ -106,56 +96,34 @@ public class JavascriptEngine {
 		}
 	}
 
-	public JavascriptEngine(ScriptCollectionLoader loader, boolean reloadScriptOnChange) {
-		this.loader = loader;
+	public JavascriptEngine() {
 		engine = new ScriptEngineManager(null).getEngineByName("nashorn");
 		engine.getContext().setErrorWriter(new Print());
 		engine.getContext().setWriter(new Print());
-		this.reloadScriptOnChange = reloadScriptOnChange;
 	}
 
-	public void compileScript() {
+	public synchronized void compileScript(List<String> scripts) {
 		try {
-			long start = System.currentTimeMillis();
 			StringBuilder jsSource = new StringBuilder();
-			// we want only one compile to run
-			synchronized (scriptChecksums) {
-				boolean needsCompile = false;
-				final Map<String, String> tmp = new HashMap<>();
-				for (Iterator<HashedScript> iterator = loader.iterator(); iterator.hasNext();) {
-					HashedScript next = iterator.next();
-					jsSource.append(next.getScript());
-					jsSource.append(";\n");
-					String foundCheckSum = scriptChecksums.get(next.getId());
-					needsCompile = needsCompile || foundCheckSum == null || !foundCheckSum.equals(next.getChecksum());
-					tmp.put(next.getId(), next.getChecksum());
-				}
-				final Set<Map.Entry<String, String>> toDel = scriptChecksums.entrySet();
-				scriptChecksums.putAll(tmp);
-
-				toDel.iterator().forEachRemaining((Map.Entry<String, String> item) -> {
-					if (tmp.get(item.getKey()) == null) {
-						scriptChecksums.remove(item.getKey());
-						LOGGER.debug("jse: removed script: {}", item.getKey());
-					}
-				});
-				if (needsCompile) {
-					script = ((Compilable) engine).compile(jsSource.toString());
-				}
+			for (String script : scripts) {
+				jsSource.append(script);
+				jsSource.append(";\n");
 			}
-			LOGGER.debug("jse: compileScript took: {}ms", (System.currentTimeMillis() - start));
+			script = ((Compilable) engine).compile(jsSource.toString());
 		} catch (ScriptException e) {
 			throw new TechnicalException("script compilation failure",e);
 		}
 	}
 
 	public Bindings createBindings() {
+		if (script == null) {
+			throw new TechnicalException("unable to create bindings. Compiled script is null.");
+		}
+
 		try {
-			final long start = System.currentTimeMillis();
 			final Bindings bindings = script.getEngine().createBindings();
 			bindings.put("console", new Console());
 			script.eval(bindings);
-			LOGGER.debug("jse: create bindings took: {}ms", (System.currentTimeMillis() - start));
 			return bindings;
 		} catch (ScriptException e) {
 			LOGGER.error("unable to create bindings", e);
@@ -163,25 +131,4 @@ public class JavascriptEngine {
 		}
 	}
 
-	public boolean isScriptsChanged() {
-
-		Iterator<HashedScript> iterator = loader.iterator();
-		if (!iterator.hasNext() && scriptChecksums.size() > 0) {
-			return true;
-		}
-		while (iterator.hasNext()) {
-			HashedScript my = iterator.next();
-			String checksum = scriptChecksums.get(my.getId());
-			if (checksum == null || !checksum.equals(my.getChecksum())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void tryCompileScript() {
-		if (script==null) {
-			this.compileScript();
-		}
-	}
 }

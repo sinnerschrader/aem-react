@@ -3,16 +3,11 @@ package com.sinnerschrader.aem.react;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleScriptContext;
 
-import com.sinnerschrader.aem.react.loader.HashedScript;
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
@@ -23,7 +18,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
@@ -46,9 +39,6 @@ public class ReactScriptEngineTest {
 	public SlingContext slingContext = new SlingContext();
 
 	@Mock
-	private ScriptCollectionLoader loader;
-
-	@Mock
 	private ReactScriptEngineFactory factory;
 
 	@Mock
@@ -57,12 +47,14 @@ public class ReactScriptEngineTest {
 	@Mock
 	private DynamicClassLoaderManager dynamicClassLoaderManager;
 
+    @Mock
+    private PoolManager poolManager;
+
 	private ScriptContext scriptContext;
 
-	private ObjectNode getJsonFromTextArea(Element ta) throws IOException, JsonProcessingException {
+	private ObjectNode getJsonFromTextArea(Element ta) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		ObjectNode json = (ObjectNode) objectMapper.readTree(ta.html());
-		return json;
+		return (ObjectNode) objectMapper.readTree(ta.html());
 	}
 
 	private Element getWrapper(Document doc) {
@@ -76,7 +68,7 @@ public class ReactScriptEngineTest {
 	}
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		scriptContext = new SimpleScriptContext();
 		StringWriter writer = new StringWriter();
@@ -85,19 +77,14 @@ public class ReactScriptEngineTest {
 		bindings.put(SlingBindings.REQUEST, slingContext.request());
 		bindings.put(SlingBindings.RESPONSE, slingContext.response());
 		bindings.put(SlingBindings.SLING, slingContext.slingScriptHelper());
-
-		List<HashedScript> scripts = new ArrayList<>();
-		HashedScript script = new HashedScript("1", "", "1");
-		scripts.add(script);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
+		Mockito.when(poolManager.execute(Mockito.any( PoolManager.EngineUser.class ))).thenReturn(expectResult());
 	}
 
 	@Test
-	@Ignore("fix me")
-	public void testEval() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEval() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, false, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -120,26 +107,25 @@ public class ReactScriptEngineTest {
 
 		Element textarea = getTextarea(doc);
 		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
-		Assert.assertTrue(wrapper.html().startsWith(result.html));
+		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
 
 	}
 
-	private RenderResult expectResult() throws Exception {
+	private RenderResult expectResult() {
 		RenderResult result = new RenderResult();
 		result.cache = "{\"cache\":true}";
-		result.html = "<div></div>";
+		result.html = "<div>result</div>";
 		return result;
 	}
 
 	@Test
-	@Ignore("fix me")
-	public void testEvalDisableMapping() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEvalDisableMapping() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -162,7 +148,7 @@ public class ReactScriptEngineTest {
 
 		Element textarea = getTextarea(doc);
 		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
-		Assert.assertTrue(wrapper.html().startsWith(result.html));
+		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
@@ -170,12 +156,10 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
-	public void testEvalServerRenderingDisabled() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEvalServerRenderingDisabled() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
-
-		RenderResult result = expectResult();
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -204,10 +188,10 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
-	public void testEvalWrapperElement() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEvalWrapperElement() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -221,19 +205,15 @@ public class ReactScriptEngineTest {
 		String renderedHtml = getRenderedHtml();
 
 		Assert.assertEquals("", renderedHtml);
-
 	}
 
 	@Test
-	@Ignore
-	public void testEvalJsonOnly() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader,null, dynamicClassLoaderManager,
+	public void testEvalJsonOnly() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager,null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
-
-		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -250,15 +230,13 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
-	public void testEvalJsonOnlyNoServerRendering() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEvalJsonOnlyNoServerRendering() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), false, true, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		slingContext.requestPathInfo().setSelectorString("json");
 		slingContext.request().setQueryString("serverRendering=disabled");
-
-		RenderResult result = expectResult();
 
 		String resourceType = "/apps/test";
 		String path = "/content/page/test";
@@ -277,11 +255,10 @@ public class ReactScriptEngineTest {
 	}
 
 	@Test
-	@Ignore("needs to be fixed")
-	public void testEvalNoIncomingMapping() throws NoSuchElementException, IllegalStateException, Exception {
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader, null, dynamicClassLoaderManager,
+	public void testEvalNoIncomingMapping() throws Exception {
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager, null, dynamicClassLoaderManager,
 				"span", "test xxx", null, null, null, new ComponentMetricsService(), true, false, false,
-				new ComponentCache(null, null, 0, 0, null, false), true);
+				new ComponentCache(null, null, 0, 0, null, false));
 
 		RenderResult result = expectResult();
 
@@ -304,7 +281,7 @@ public class ReactScriptEngineTest {
 
 		Element textarea = getTextarea(doc);
 		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
-		Assert.assertTrue(wrapper.html().startsWith(result.html));
+		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());

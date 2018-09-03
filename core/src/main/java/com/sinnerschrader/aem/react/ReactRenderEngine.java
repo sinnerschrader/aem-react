@@ -15,26 +15,29 @@ public class ReactRenderEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
 
     private Bindings bindings;
+    private String stateHash;
 
-    ReactRenderEngine(Bindings bindings) {
+    ReactRenderEngine(Bindings bindings, String stateHash) {
         this.bindings = bindings;
+        this.stateHash = stateHash;
+    }
+
+    public boolean isValid(String hash) {
+        if (stateHash == null) {
+            return false;
+        }
+        return stateHash.equals(hash);
     }
 
     public ReactScriptEngine.RenderResult render(String path, String resourceType, int rootNo, String wcmmode, Cqx cqx, boolean renderAsJson,
                                                  List<String> selectors) {
-
-        long startTime = System.currentTimeMillis();
-
         try {
-            long start = System.currentTimeMillis();
+            long startTime = System.currentTimeMillis();
             final ScriptObjectMirror aemGlobal = (ScriptObjectMirror) bindings.get("AemGlobal");
             ScriptObjectMirror mirror = (ScriptObjectMirror) aemGlobal.get("renderReactComponent");
-            LOGGER.debug("rre: get renderReactComponent took: {}ms", (System.currentTimeMillis() - start));
 
-            start = System.currentTimeMillis();
             Object value = mirror.call(null, path, resourceType, String.valueOf(rootNo), wcmmode,
                     renderAsJson, selectors.toArray(new String[selectors.size()]), cqx);
-            LOGGER.debug("rre: call renderReactComponent took: {}ms", (System.currentTimeMillis() - start));
 
             ReactScriptEngine.RenderResult result = new ReactScriptEngine.RenderResult();
             result.html = (String) ((Map<String, Object>) value).get("html");
@@ -43,7 +46,6 @@ public class ReactRenderEngine {
             LOGGER.debug("rre: render took: {}ms", (System.currentTimeMillis() - startTime));
             return result;
         } catch (Exception e) {
-            LOGGER.error("error", e);
             throw new TechnicalException("cannot render react on server", e);
         }
     }

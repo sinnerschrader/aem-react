@@ -2,17 +2,14 @@ package com.sinnerschrader.aem.react;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.sinnerschrader.aem.react.exception.TechnicalException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,9 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Cqx;
 import com.sinnerschrader.aem.react.api.JsProxy;
-import com.sinnerschrader.aem.react.api.Sling;
-import com.sinnerschrader.aem.react.loader.HashedScript;
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JavascriptEngineTest {
@@ -39,100 +33,29 @@ public class JavascriptEngineTest {
 		}
 	}
 
-	@Mock
-	private ScriptCollectionLoader loader;
+	@Test(expected = TechnicalException.class)
+	public void testCompileScriptIsNull() {
+		JavascriptEngine engine = new JavascriptEngine();
+		engine.createBindings();
+	}
 
-	@Mock
-	private Sling sling;
-
-	@Test
-	public void testNoChanges() {
-		List<HashedScript> scripts = setupScripts();
-		JavascriptEngine engine = new JavascriptEngine(loader, true);
-		engine.compileScript();
-
-		// check that only the checksum is relevant
-		scripts.clear();
-		HashedScript scriptv2 = new HashedScript("1", "asdasdasdsa", "1");
-		scripts.add(scriptv2);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		Assert.assertFalse(engine.isScriptsChanged());
-
+	@Test(expected = TechnicalException.class)
+	public void testScriptIsNotCompilable() {
+		JavascriptEngine engine = new JavascriptEngine();
+		engine.compileScript(Collections.singletonList("function broken script;"));
 	}
 
 	@Test
-	public void testChanges() {
-		List<HashedScript> scripts = setupScripts();
-		JavascriptEngine engine = new JavascriptEngine(loader, true);
-		engine.compileScript();
-
-		// check that checksum means it is changed
-		scripts.clear();
-		HashedScript scriptv3 = new HashedScript("2", "", "1");
-		scripts.add(scriptv3);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		Assert.assertTrue(engine.isScriptsChanged());
-
-	}
-
-	@Test
-	public void testNoScriptsChanges() {
-		List<HashedScript> scripts = setupScripts();
-		JavascriptEngine engine = new JavascriptEngine(loader, true);
-		engine.compileScript();
-
-		// check that checksum means it is changed
-		scripts.clear();
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		Assert.assertTrue(engine.isScriptsChanged());
-
-	}
-
-	@Test
-	public void testMoreScriptsChanges() {
-		List<HashedScript> scripts = setupScripts();
-		JavascriptEngine engine = new JavascriptEngine(loader, true);
-		engine.compileScript();
-
-		// check that checksum means it is changed
-		scripts.clear();
-		HashedScript scriptv3 = new HashedScript("42", "", "42");
-		HashedScript scriptv4 = new HashedScript("1337", "", "1337");
-		scripts.add(scriptv3);
-		scripts.add(scriptv4);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-
-		Assert.assertTrue(engine.isScriptsChanged());
-	}
-
-	private List<HashedScript> setupScripts() {
-		List<HashedScript> scripts = new ArrayList<>();
-		HashedScript script = new HashedScript("1", "", "1");
-		scripts.add(script);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
-		return scripts;
-	}
-
-	@Test
-	@Ignore("fix me")
 	public void testRender() throws IOException {
 		URL resource = this.getClass().getResource("/react.js");
 		String js = IOUtils.toString(resource);
-		JavascriptEngine engine = new JavascriptEngine(loader, true);
-		engine.compileScript();
 
-		List<HashedScript> scripts = new ArrayList<>();
-		HashedScript script = new HashedScript("1", js, "1");
-		scripts.add(script);
-		Mockito.when(loader.iterator()).thenReturn(scripts.iterator());
+		JavascriptEngine engine = new JavascriptEngine();
+		engine.compileScript(Collections.singletonList(js));
 
-		ReactRenderEngine renderEngine = new ReactRenderEngine(engine.createBindings());
+		ReactRenderEngine renderEngine = new ReactRenderEngine(engine.createBindings(), "abc");
 
-		List<String> selectors = new ArrayList() {
-			{
-				this.add("s1");
-			}
-		};
+		List<String> selectors = Collections.singletonList("s1");
 		RenderResult result = renderEngine.render("/content", "/apps/test", 1, "disabled", new MockCqx(), false,
 				selectors);
 		Assert.assertEquals("my html", result.html);
@@ -140,13 +63,12 @@ public class JavascriptEngineTest {
 		Assert.assertEquals("/content", tree.get("path").textValue());
 		Assert.assertEquals("s1", tree.get("selectors").get(0).textValue());
 		Assert.assertEquals(MockCqx.CQX_RESPONSE, tree.get("cqx").textValue());
-		//Assert.assertEquals(reactContext, result.reactContext);
 	}
 
 	@Test
 	public void testConsole() {
 		JavascriptEngine.Console console = new JavascriptEngine.Console();
-		console.debug("test", null);
+		console.debug("test");
 		console.debug("test", "","");
 		console.info("test", null);
 		console.info("test");
