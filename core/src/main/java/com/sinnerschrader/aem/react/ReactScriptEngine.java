@@ -40,7 +40,6 @@ import com.sinnerschrader.aem.react.exception.TechnicalException;
 import com.sinnerschrader.aem.react.json.ReactSlingHttpServletRequestWrapper;
 import com.sinnerschrader.aem.react.json.ResourceMapper;
 import com.sinnerschrader.aem.react.json.ResourceMapperLocator;
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.mapping.ResourceResolverHelperFactory;
 import com.sinnerschrader.aem.react.mapping.ResourceResolverUtils;
 import com.sinnerschrader.aem.react.metrics.ComponentMetrics;
@@ -85,14 +84,14 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public String cache;
 	}
 
-	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, ScriptCollectionLoader loader, OsgiServiceFinder finder,
+	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, PoolManager poolManager, OsgiServiceFinder finder,
 								DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
 								org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
 								ObjectMapper mapper, ComponentMetricsService metricsService, boolean enableReverseMapping,
-								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache, boolean reloadScriptOnChange) {
+								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
-		this.poolManager = new PoolManager(loader, reloadScriptOnChange);
+		this.poolManager = poolManager;
 		this.finder = finder;
 		this.dynamicClassLoaderManager = dynamicClassLoaderManager;
 		this.rootElementName = rootElementName;

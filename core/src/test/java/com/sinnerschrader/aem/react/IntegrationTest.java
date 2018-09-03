@@ -5,14 +5,14 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 import javax.servlet.RequestDispatcher;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -30,6 +30,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +39,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -46,8 +46,6 @@ import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.integration.TextProps;
-import com.sinnerschrader.aem.react.loader.HashedScript;
-import com.sinnerschrader.aem.react.loader.ScriptCollectionLoader;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -57,9 +55,6 @@ public class IntegrationTest {
 	private ReactScriptEngineFactory factory;
 	@Mock
 	private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-	@Mock
-	private ScriptCollectionLoader loader;
 
 	@Mock
 	private MockRequestDispatcherFactory requestDispatcherFactory;
@@ -73,14 +68,16 @@ public class IntegrationTest {
 	@Mock
 	private ModelFactory modelFactory;
 
+	@Mock
+	private ComponentMetricsService metricsService;
+
 	private ComponentCache mockCache = new ComponentCache(null, null, 0, 0, null, false);
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	private ObjectNode getJsonFromTextArea(Element ta) throws IOException, JsonProcessingException {
+	private ObjectNode getJsonFromTextArea(Element ta) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		ObjectNode json = (ObjectNode) objectMapper.readTree(ta.html());
-		return json;
+        return (ObjectNode) objectMapper.readTree(ta.html());
 	}
 
 	private Element getWrapper(Document doc) {
@@ -99,8 +96,18 @@ public class IntegrationTest {
 	@Mock
 	private RequestDispatcher dispatcher;
 
+	@Before
+	public void before() {
+		MetricRegistry ms = Mockito.mock(MetricRegistry.class);
+		Timer timer = Mockito.mock(Timer.class);
+		Timer.Context context = Mockito.mock(Timer.Context.class);
+		Mockito.when(timer.time()).thenReturn(context);
+		Mockito.when(ms.timer(Mockito.any(String.class))).thenReturn(timer);
+		Mockito.when(metricsService.getRegistry()).thenReturn(ms);
+	}
+
 	@Test
-	public void testRenderText() throws NoSuchElementException, IllegalStateException, Exception {
+	public void testRenderText() throws Exception {
 		String resourceType = "react-demo/components/text";
 		String path = "/content/page/test";
 		String content = "Hallo";
@@ -127,7 +134,7 @@ public class IntegrationTest {
 	}
 
 	@Test
-	public void testRenderTextRequestModel() throws NoSuchElementException, IllegalStateException, Exception {
+	public void testRenderTextRequestModel() throws Exception {
 		String resourceType = "react-demo/components/text";
 		String path = "/content/page/test";
 		String content = "Hallo";
@@ -158,7 +165,7 @@ public class IntegrationTest {
 	}
 
 	@Test
-	public void testDialog() throws NoSuchElementException, IllegalStateException, Exception {
+	public void testDialog() throws Exception {
 		String resourceType = "react-demo/components/text";
 		String path = "/content/page/test";
 		String content = "Hallo";
@@ -175,7 +182,7 @@ public class IntegrationTest {
 	}
 
 	@Test
-	public void testRenderCache() throws NoSuchElementException, IllegalStateException, Exception {
+	public void testRenderCache() throws Exception {
 		String resourceType = "react-demo/components/text";
 		String path = "/content/page/test";
 		String content = "Hallo";
@@ -192,9 +199,7 @@ public class IntegrationTest {
 
 	}
 
-	private String render() throws Exception, ScriptException {
-		Mockito.when(loader.iterator()).thenAnswer((InvocationOnMock mock) -> createScripts().iterator());
-
+	private String render() throws Exception {
 		Mockito.when(requestDispatcherFactory.getRequestDispatcher(Mockito.any(Resource.class),
 				Mockito.any(RequestDispatcherOptions.class))).thenReturn(dispatcher);
 		Mockito.doAnswer((InvocationOnMock invoke) -> {
@@ -204,11 +209,14 @@ public class IntegrationTest {
 				Mockito.any(SlingHttpServletResponse.class));
 		slingContext.request().setRequestDispatcherFactory(requestDispatcherFactory);
 		ScriptContext scriptContext = new SimpleScriptContext();
-		JavascriptEngine jsEngine = new JavascriptEngine(loader, true);
+		JavascriptEngine jsEngine = new JavascriptEngine();
 
-		ReactScriptEngine r = new ReactScriptEngine(factory, loader,null, dynamicClassLoaderManager,
+		PoolManager poolManager = new PoolManager(5, metricsService);
+		poolManager.updateScripts(createScripts());
+
+		ReactScriptEngine r = new ReactScriptEngine(factory, poolManager,null, dynamicClassLoaderManager,
 				"span", "test xxx", modelFactory, null, mapper, new ComponentMetricsService(), false, false, false,
-				mockCache, true);
+				mockCache);
 		ClassLoader classLoader = this.getClass().getClassLoader();
 		Mockito.when(factory.getClassLoader()).thenReturn(classLoader);
 		Mockito.when(dynamicClassLoaderManager.getDynamicClassLoader()).thenReturn(classLoader);
@@ -228,13 +236,13 @@ public class IntegrationTest {
 
 	}
 
-	private List<HashedScript> createScripts() throws IOException {
+	private List<String> createScripts() throws IOException {
 		String script1 = IOUtils.toString(getClass().getResource("/com/sinnerschrader/aem/react/nashorn-polyfill.js"));
 		String script2 = IOUtils.toString(getClass().getResource("/ts/reactserver.js"));
 
-		List<HashedScript> scripts = new ArrayList<>();
-		scripts.add(new HashedScript("ff1", script1, "/script1"));
-		scripts.add(new HashedScript("ff2", script2, "/script2"));
+		List<String> scripts = new ArrayList<>();
+		scripts.add(script1);
+		scripts.add(script2);
 		return scripts;
 	}
 

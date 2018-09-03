@@ -16,5 +16,5 @@ public interface ScriptCollectionLoader {
    * 
    * @return
    */
-  public Iterator<HashedScript> iterator();
+  public Iterator<String> iterator();
 }
