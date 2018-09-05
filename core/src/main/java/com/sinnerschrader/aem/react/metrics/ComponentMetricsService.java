@@ -1,14 +1,8 @@
 package com.sinnerschrader.aem.react.metrics;
 
-import java.util.Map;
+import java.util.Dictionary;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
@@ -20,27 +14,21 @@ import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Slf4jReporter;
 import com.sinnerschrader.aem.react.cache.CacheStatsCounter;
 
-@Service(ComponentMetricsService.class)
-@Component(immediate = true, metatype = true)
 public class ComponentMetricsService {
 
-	private static final String METRICS_ENABLED = "metrics.enabled";
+	public  static final String METRICS_ENABLED = "metrics.enabled";
 
-	private static final String METRICS_JMX_ENABLED = "metrics.jmx.enabled";
+	public static final String METRICS_JMX_ENABLED = "metrics.jmx.enabled";
 
-	private static final String METRICS_REPORTING_RATE = "metrics.reporting.rate";
+	public static final String METRICS_REPORTING_RATE = "metrics.reporting.rate";
 
 	static final ComponentMetrics NO_OP = new DummyComponentMetrics();
 
 	private MetricRegistry metricRegistry;
 
-	@Property(name = METRICS_ENABLED, label = "enabled", boolValue = false)
-	private boolean enabled;
-
-	@Property(name = METRICS_JMX_ENABLED, label = "jmx enabled", boolValue = false)
+	private boolean logEnabled;
 	private boolean jmxEnabled;
 
-	@Property(name = METRICS_REPORTING_RATE, label = "reporting rate", longValue = 5)
 	private long reportingRate;
 
 	private ScheduledReporter logReporter;
@@ -48,47 +36,42 @@ public class ComponentMetricsService {
 	private JmxReporter jmxReporter;
 
 	public ComponentMetrics create(Resource resource) {
-		if (enabled) {
-			return DefaultComponentMetrics.create(resource, metricRegistry);
+		if (!logEnabled && !jmxEnabled) {
+			return NO_OP;
 		}
-		return NO_OP;
+		return DefaultComponentMetrics.create(resource, metricRegistry);
 
 	}
 
-
-	@Activate
-	public void start(Map<String, Object> dictionary) {
+	public void start(Dictionary<String, Object> dictionary) {
 		configure(dictionary);
 	}
 
-	private void configure(Map<String, Object> dictionary) {
+	private void configure(Dictionary<String, Object> dictionary) {
 		this.reportingRate = PropertiesUtil.toLong(dictionary.get(METRICS_REPORTING_RATE), 5l);
-		this.enabled = PropertiesUtil.toBoolean(dictionary.get(METRICS_ENABLED), false);
+		this.logEnabled = PropertiesUtil.toBoolean(dictionary.get(METRICS_ENABLED), false);
 		this.jmxEnabled = PropertiesUtil.toBoolean(dictionary.get(METRICS_JMX_ENABLED), false);
 		metricRegistry = new MetricRegistry();
-		if (enabled) {
-			Logger logger = LoggerFactory.getLogger(ComponentMetricsService.class);
-			if (jmxEnabled) {
-				jmxReporter = JmxReporter.forRegistry(metricRegistry)//
-						.convertRatesTo(TimeUnit.SECONDS)//
-						.convertDurationsTo(TimeUnit.MILLISECONDS)//
-						.build();
-				jmxReporter.start();
+		Logger logger = LoggerFactory.getLogger(ComponentMetricsService.class);
+		if (jmxEnabled) {
+			jmxReporter = JmxReporter.forRegistry(metricRegistry)//
+					.convertRatesTo(TimeUnit.SECONDS)//
+					.convertDurationsTo(TimeUnit.MILLISECONDS)//
+					.build();
+			jmxReporter.start();
 
-			} else {
-				logReporter = Slf4jReporter.forRegistry(metricRegistry)//
-						.outputTo(logger)//
-						.convertRatesTo(TimeUnit.SECONDS)//
-						.convertDurationsTo(TimeUnit.MILLISECONDS)//
-						.build();
-				logReporter.start(reportingRate, TimeUnit.MINUTES);
-			}
-
+		}
+		if (logEnabled) {
+			logReporter = Slf4jReporter.forRegistry(metricRegistry)//
+					.outputTo(logger)//
+					.convertRatesTo(TimeUnit.SECONDS)//
+					.convertDurationsTo(TimeUnit.MILLISECONDS)//
+					.build();
+			logReporter.start(reportingRate, TimeUnit.MINUTES);
 		}
 
 	}
 
-	@Deactivate
 	public void stop() {
 		metricRegistry = null;
 		if (logReporter != null) {
@@ -101,12 +84,6 @@ public class ComponentMetricsService {
 		}
 	}
 
-	@Modified
-	public void modified(Map<String, Object> dictionary) {
-		this.stop();
-		this.start(dictionary);
-	}
-
 
 	public MetricRegistry getRegistry() {
 		return metricRegistry;
@@ -115,7 +92,5 @@ public class ComponentMetricsService {
 	public CacheStatsCounter getCacheStatsCounter() {
 		return new CacheStatsCounter(metricRegistry, "react.cache");
 	}
-
-
 
 }

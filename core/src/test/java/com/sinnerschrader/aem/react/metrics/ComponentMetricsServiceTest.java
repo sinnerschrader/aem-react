@@ -1,7 +1,6 @@
 package com.sinnerschrader.aem.react.metrics;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Hashtable;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -18,7 +17,7 @@ public class ComponentMetricsServiceTest {
 
 	@Test
 	public void testDisabled() throws InterruptedException {
-		Map map = new HashMap<String, Object>() {
+		Hashtable map = new Hashtable<String, Object>() {
 			{
 				this.put("metrics.enabled", false);
 			}
@@ -32,7 +31,7 @@ public class ComponentMetricsServiceTest {
 
 	@Test
 	public void testJmxEnabled() throws InterruptedException {
-		Map map = new HashMap<String, Object>() {
+		Hashtable map = new Hashtable<String, Object>() {
 			{
 				this.put("metrics.enabled", true);
 				this.put("metrics.jmx.enabled", true);
@@ -47,7 +46,7 @@ public class ComponentMetricsServiceTest {
 
 	@Test
 	public void testEnabled() throws InterruptedException {
-		Map map = new HashMap<String, Object>() {
+		Hashtable map = new Hashtable<String, Object>() {
 			{
 				this.put("metrics.enabled", true);
 			}
@@ -60,7 +59,7 @@ public class ComponentMetricsServiceTest {
 
 	@Test
 	public void testCreateResourceEnabled() throws InterruptedException {
-		Map map = new HashMap<String, Object>() {
+		Hashtable map = new Hashtable<String, Object>() {
 			{
 				this.put("metrics.enabled", true);
 			}
@@ -75,7 +74,7 @@ public class ComponentMetricsServiceTest {
 
 	@Test
 	public void testCreateResourceDisabled() throws InterruptedException {
-		Map map = new HashMap<String, Object>() {
+		Hashtable map = new Hashtable<String, Object>() {
 			{
 				this.put("metrics.enabled", false);
 			}
