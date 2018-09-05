@@ -65,9 +65,9 @@ public class ComponentMetricsService {
 		this.reportingRate = PropertiesUtil.toLong(dictionary.get(METRICS_REPORTING_RATE), 5l);
 		this.enabled = PropertiesUtil.toBoolean(dictionary.get(METRICS_ENABLED), false);
 		this.jmxEnabled = PropertiesUtil.toBoolean(dictionary.get(METRICS_JMX_ENABLED), false);
+		metricRegistry = new MetricRegistry();
 		if (enabled) {
 			Logger logger = LoggerFactory.getLogger(ComponentMetricsService.class);
-			metricRegistry = new MetricRegistry();
 			if (jmxEnabled) {
 				jmxReporter = JmxReporter.forRegistry(metricRegistry)//
 						.convertRatesTo(TimeUnit.SECONDS)//
