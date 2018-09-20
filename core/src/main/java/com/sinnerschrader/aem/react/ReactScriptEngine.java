@@ -47,42 +47,41 @@ import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
-	private static final String JSON_RENDER_SELECTOR = "json";
-	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
-	public static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
-
 	public interface Command {
 		Object execute(JavascriptEngine e);
 	}
-
-	public static final String SERVER_RENDERING_DISABLED = "disabled";
-	public static final String SERVER_RENDERING_PARAM = "serverRendering";
-	private static final Logger LOG = LoggerFactory.getLogger(ReactScriptEngine.class);
-	private OsgiServiceFinder finder;
-	private DynamicClassLoaderManager dynamicClassLoaderManager;
-	private String rootElementName;
-	private String rootElementClass;
-	private org.apache.sling.models.factory.ModelFactory modelFactory;
-	private AdapterManager adapterManager;
-	private ObjectMapper mapper;
-	private ComponentMetricsService metricsService;
-	private boolean disableMapping;
-	private boolean enableReverseMapping;
-	private boolean mangleNameSpaces;
-	private ComponentCache cache;
-	private PoolManager poolManager;
 
 	/**
 	 * This class is the result of rendering a react component(-tree). It consists
 	 * of html and cache.
 	 *
 	 * @author stemey
-	 *
 	 */
 	public static class RenderResult {
 		public String html;
 		public String cache;
 	}
+
+	private static final String JSON_RENDER_SELECTOR = "json";
+	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
+	public static final String REACT_ROOT_NO_KEY = "com.sinnerschrader.aem.react.RootNo";
+
+	private static final String SERVER_RENDERING_DISABLED = "disabled";
+	private static final String SERVER_RENDERING_PARAM = "serverRendering";
+
+	private final OsgiServiceFinder finder;
+	private final DynamicClassLoaderManager dynamicClassLoaderManager;
+	private final String rootElementName;
+	private final String rootElementClass;
+	private final org.apache.sling.models.factory.ModelFactory modelFactory;
+	private final AdapterManager adapterManager;
+	private final ObjectMapper mapper;
+	private final ComponentMetricsService metricsService;
+	private final boolean disableMapping;
+	private final boolean enableReverseMapping;
+	private final boolean mangleNameSpaces;
+	private final ComponentCache cache;
+	private final PoolManager poolManager;
 
 	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, PoolManager poolManager, OsgiServiceFinder finder,
 								DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
@@ -130,9 +129,9 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			final List<String> selectors;
 			boolean renderAsJson = rawSelectors.indexOf(JSON_RENDER_SELECTOR) >= 0;
 			if (renderAsJson) {
-				selectors = rawSelectors.stream().filter((String selector) -> {
-					return !selector.equals(JSON_RENDER_SELECTOR);
-				}).collect(Collectors.toList());
+				selectors = rawSelectors.stream()
+						.filter((String selector) -> !JSON_RENDER_SELECTOR.equals(selector))
+						.collect(Collectors.toList());
 			} else {
 				selectors = rawSelectors;
 			}
@@ -182,8 +181,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					renderedHtml = result.html;
 					cacheString = result.cache;
 				} else if (renderAsJson) {
-					// development mode: return cache with just the current
-					// resource.
+					// development mode: return cache with just the current resource.
 					JSONObject cache = new JSONObject();
 					JSONObject resources = new JSONObject();
 					JSONObject resourceEntry = new JSONObject();
@@ -206,7 +204,6 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				} else {
 					output = wrapHtml(mappedPath, resource, renderedHtml, serverRendering, getWcmMode(request),
 							cacheString, selectors);
-
 				}
 
 				scriptContext.getWriter().write(output);
@@ -248,7 +245,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			throw new TechnicalException("cannot create react props", e);
 		}
 		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
-		String classString = (StringUtils.isNotEmpty(rootElementClass)) ? " class=\"" + rootElementClass + "\"" : "";
+		String classString = StringUtils.isNotEmpty(rootElementClass) ? " class=\"" + rootElementClass + "\"" : "";
 		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
 				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >" + renderedHtml + "</" + rootElementName
 				+ ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
@@ -261,8 +258,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingScriptHelper sling = (SlingScriptHelper) getBindings(ctx).get(SlingBindings.SLING);
 
 		ClassLoader classLoader = dynamicClassLoaderManager.getDynamicClassLoader();
-		ModelFactory reactModelFactory = new ModelFactory(modelCollector, classLoader, request, modelFactory, adapterManager, mapper,
-				request.getResourceResolver());
+		ModelFactory reactModelFactory = new ModelFactory(modelCollector, classLoader, request, modelFactory,
+				adapterManager, mapper, request.getResourceResolver());
 		return new Cqx(new Sling(ctx), finder, reactModelFactory, sling.getService(XSSAPI.class), mapper);
 	}
 
@@ -285,28 +282,22 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
 		final ModelCollector collector= new ModelCollector();
 		return cache.cache(collector, new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
-				mappedPath, resourceType, () -> {
+				mappedPath, resourceType, () -> poolManager.execute((ReactRenderEngine engine) -> {
 
-					return poolManager.execute((ReactRenderEngine engine) -> {
-
-						ResourceMapper replacedResourceMapper = null;
-						try {
-							ResourceMapper resourceMapper = new ResourceMapper(request);
-							replacedResourceMapper = ResourceMapperLocator.setInstance(resourceMapper);
-							return engine.render(mappedPath, resourceType, rootNo, wcmmode,
-									createCqx(collector, scriptContext), renderAsJson, selectors);
-						} catch (Exception e) {
-							throw new TechnicalException("error rendering react markup", e);
-						} finally {
-							ResourceMapperLocator.setInstance(replacedResourceMapper);
-						}
-					});
-
-				});
-
+					ResourceMapper replacedResourceMapper = null;
+					try {
+						ResourceMapper resourceMapper = new ResourceMapper(request);
+						replacedResourceMapper = ResourceMapperLocator.setInstance(resourceMapper);
+						Cqx cqx = createCqx(collector, scriptContext);
+						return engine.render(mappedPath, resourceType, rootNo, wcmmode,
+								cqx, renderAsJson, selectors);
+					} catch (Exception e) {
+						throw new TechnicalException("error rendering react markup", e);
+					} finally {
+						ResourceMapperLocator.setInstance(replacedResourceMapper);
+					}
+				}));
 	}
-
-
 
 	private SlingHttpServletRequest getRequest(Bindings bindings) {
 		return (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
