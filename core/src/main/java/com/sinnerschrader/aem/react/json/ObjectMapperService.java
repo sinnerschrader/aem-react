@@ -45,16 +45,14 @@ public class ObjectMapperService implements JsonService {
 	@Override
 	public String write(Object value, SlingHttpServletRequest request) {
 		StringWriter writer = new StringWriter();
-		boolean remove = false;
+		ResourceMapper replacedResourceMapper = null;
 		try {
-			remove = ResourceMapperLocator.setInstance(request);
+			replacedResourceMapper = ResourceMapperLocator.setInstance(request);
 			objectWriter.writeValue(writer, value);
 		} catch (IOException e) {
 			throw new TechnicalException("cannot convert object to json", e);
 		} finally {
-			if (remove) {
-				ResourceMapperLocator.clearInstance();
-			}
+			ResourceMapperLocator.setInstance(replacedResourceMapper);
 		}
 		return writer.toString();
 	}

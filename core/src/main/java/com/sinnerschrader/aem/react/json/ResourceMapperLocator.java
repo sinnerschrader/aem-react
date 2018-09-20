@@ -10,15 +10,13 @@ public class ResourceMapperLocator {
 		return mapperHolder.get();
 	}
 
-	public static boolean setInstance(ResourceMapper mapper) {
-		if (getInstance() != null) {
-			return false;
-		}
+	public static ResourceMapper setInstance(ResourceMapper mapper) {
+		ResourceMapper oldVal = getInstance();
 		mapperHolder.set(mapper);
-		return true;
+		return oldVal;
 	}
 
-	public static boolean setInstance(SlingHttpServletRequest request) {
+	public static ResourceMapper setInstance(SlingHttpServletRequest request) {
 		return setInstance(new ResourceMapper(request));
 	}
 

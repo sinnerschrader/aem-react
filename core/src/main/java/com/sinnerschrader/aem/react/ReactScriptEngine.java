@@ -289,18 +289,16 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 					return poolManager.execute((ReactRenderEngine engine) -> {
 
-						boolean removeMapper = false;
+						ResourceMapper replacedResourceMapper = null;
 						try {
 							ResourceMapper resourceMapper = new ResourceMapper(request);
-							removeMapper = ResourceMapperLocator.setInstance(resourceMapper);
+							replacedResourceMapper = ResourceMapperLocator.setInstance(resourceMapper);
 							return engine.render(mappedPath, resourceType, rootNo, wcmmode,
 									createCqx(collector, scriptContext), renderAsJson, selectors);
 						} catch (Exception e) {
 							throw new TechnicalException("error rendering react markup", e);
 						} finally {
-							if (removeMapper) {
-								ResourceMapperLocator.clearInstance();
-							}
+							ResourceMapperLocator.setInstance(replacedResourceMapper);
 						}
 					});
 
