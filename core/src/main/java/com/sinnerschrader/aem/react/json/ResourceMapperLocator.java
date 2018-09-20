@@ -4,7 +4,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 
 public class ResourceMapperLocator {
 
-	public static ThreadLocal<ResourceMapper> mapperHolder = new ThreadLocal<>();
+	private static ThreadLocal<ResourceMapper> mapperHolder = new ThreadLocal<>();
 
 	public static ResourceMapper getInstance() {
 		return mapperHolder.get();
