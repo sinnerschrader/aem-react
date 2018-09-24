@@ -39,7 +39,7 @@ public class StringSerializer extends JsonSerializer<String> implements Contextu
 			ResourceMapper mapper = ResourceMapperLocator.getInstance();
 			if (mapper == null) {
 				gen.writeString(value);
-				LOGGER.error("no instance of resourceResolver bound to thread");
+				LOGGER.warn("No instance of resourceResolver bound to thread");
 			} else {
 				gen.writeString(ResourceResolverUtils.getUriPath(mapper.map(value)));
 			}
