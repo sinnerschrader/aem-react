@@ -28,7 +28,7 @@
         <module>core</module>
         <module>generate-typescript-maven-plugin</module>
         <module>aem-react-api</module>
-        <module>jdk-nashorn-fragment</module>
+        <!--<module>jdk-nashorn-fragment</module>-->
     </modules>
 
     <scm>
