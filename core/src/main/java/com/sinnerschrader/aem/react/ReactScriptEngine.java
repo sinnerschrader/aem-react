@@ -23,8 +23,6 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.sling.JsonObjectCreator;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.adobe.granite.xss.XSSAPI;
 import com.day.cq.wcm.api.WCMMode;
@@ -171,7 +169,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 					final String reactContext = (String) request.getAttribute(REACT_CONTEXT_KEY);
 					Integer rootNo = (Integer) request.getAttribute(REACT_ROOT_NO_KEY);
 					if (rootNo == null) {
-						rootNo = 1;
+						rootNo = 0;
 					} else {
 						rootNo = rootNo + 1;
 					}
