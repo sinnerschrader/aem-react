@@ -81,11 +81,11 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 	private final ComponentCache cache;
 	private final PoolManager poolManager;
 
-	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, PoolManager poolManager, OsgiServiceFinder finder,
-								DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName, String rootElementClass,
-								org.apache.sling.models.factory.ModelFactory modelFactory, AdapterManager adapterManager,
-								ObjectMapper mapper, ComponentMetricsService metricsService, boolean enableReverseMapping,
-								boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
+	protected ReactScriptEngine(ReactScriptEngineFactory scriptEngineFactory, PoolManager poolManager,
+			OsgiServiceFinder finder, DynamicClassLoaderManager dynamicClassLoaderManager, String rootElementName,
+			String rootElementClass, org.apache.sling.models.factory.ModelFactory modelFactory,
+			AdapterManager adapterManager, ObjectMapper mapper, ComponentMetricsService metricsService,
+			boolean enableReverseMapping, boolean disableMapping, boolean mangleNameSpaces, ComponentCache cache) {
 		super(scriptEngineFactory);
 		this.adapterManager = adapterManager;
 		this.poolManager = poolManager;
@@ -127,8 +127,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			final List<String> selectors;
 			boolean renderAsJson = rawSelectors.indexOf(JSON_RENDER_SELECTOR) >= 0;
 			if (renderAsJson) {
-				selectors = rawSelectors.stream()
-						.filter((String selector) -> !JSON_RENDER_SELECTOR.equals(selector))
+				selectors = rawSelectors.stream().filter((String selector) -> !JSON_RENDER_SELECTOR.equals(selector))
 						.collect(Collectors.toList());
 			} else {
 				selectors = rawSelectors;
@@ -278,23 +277,25 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			ScriptContext scriptContext, boolean renderAsJson, String reactContext, List<String> selectors)
 			throws Exception {
 		SlingHttpServletRequest request = getRequest(getBindings(scriptContext));
-		final ModelCollector collector= new ModelCollector();
-		return cache.cache(collector, new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors), request,
-				mappedPath, resourceType, () -> poolManager.execute((ReactRenderEngine engine) -> {
+		final ModelCollector collector = new ModelCollector();
+		ResourceMapper resourceMapper = new ResourceMapper(request);
+		ResourceMapper replacedResourceMapper = null;
+		try {
+			replacedResourceMapper = ResourceMapperLocator.setInstance(resourceMapper);
+			return cache.cache(collector, new CacheKey(mappedPath, resourceType, wcmmode, renderAsJson, selectors),
+					request, mappedPath, resourceType, () -> poolManager.execute((ReactRenderEngine engine) -> {
 
-					ResourceMapper replacedResourceMapper = null;
-					try {
-						ResourceMapper resourceMapper = new ResourceMapper(request);
-						replacedResourceMapper = ResourceMapperLocator.setInstance(resourceMapper);
-						Cqx cqx = createCqx(collector, scriptContext);
-						return engine.render(mappedPath, resourceType, rootNo, wcmmode,
-								cqx, renderAsJson, selectors);
-					} catch (Exception e) {
-						throw new TechnicalException("error rendering react markup", e);
-					} finally {
-						ResourceMapperLocator.setInstance(replacedResourceMapper);
-					}
-				}));
+						try {
+							Cqx cqx = createCqx(collector, scriptContext);
+							return engine.render(mappedPath, resourceType, rootNo, wcmmode, cqx, renderAsJson,
+									selectors);
+						} catch (Exception e) {
+							throw new TechnicalException("error rendering react markup", e);
+						}
+					}));
+		} finally {
+			ResourceMapperLocator.setInstance(replacedResourceMapper);
+		}
 	}
 
 	private SlingHttpServletRequest getRequest(Bindings bindings) {
