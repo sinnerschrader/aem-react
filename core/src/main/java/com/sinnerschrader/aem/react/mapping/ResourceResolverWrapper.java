@@ -10,6 +10,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
+@SuppressWarnings("all")
 public class ResourceResolverWrapper implements ResourceResolver{
 
 	private ResourceResolver delegate;
