@@ -64,6 +64,7 @@ public class ModelFactory {
 		}
 	}
 
+	@SuppressWarnings("all")
 	private static class ResourcePathInfoWrapper implements RequestPathInfo {
 
 		private RequestPathInfo wrapped;
