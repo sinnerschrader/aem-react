@@ -2,7 +2,7 @@ package com.sinnerschrader.aem.react.cache;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
@@ -15,8 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry.MetricSupplier;
 import com.codahale.metrics.RatioGauge;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -29,19 +27,25 @@ public class ComponentCache {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ComponentCache.class);
 
-	public static interface ResultRenderer {
-		public RenderResult render() throws Exception;
+	public interface ResultRenderer {
+		RenderResult render() throws Exception;
 	}
 
-	Cache<CacheKey, CachedHtml> cache;
+	private Cache<CacheKey, CachedHtml> cache;
 
 	private ModelFactory modelFactory;
 
 	private boolean caching;
 
+	private Counter cacheErrorCounter;
+
 	private Counter cacheHitCounter;
 
 	private Counter cacheTotalCounter;
+
+	private Counter cacheModelMissCounter;
+
+	private Counter cacheHtmlMissCounter;
 
 	private boolean debug;
 
@@ -50,19 +54,22 @@ public class ComponentCache {
 		super();
 		this.debug = debug;
 		if (metricsService != null && metricsService.getRegistry() != null) {
-			this.cacheHitCounter = metricsService.getRegistry().counter("react.cache.hit");
+			this.cacheErrorCounter = metricsService.getRegistry().counter("react.cache.error.total");
+			this.cacheHitCounter = metricsService.getRegistry().counter("react.cache.hit.total");
 			this.cacheTotalCounter = metricsService.getRegistry().counter("react.cache.total");
-			metricsService.getRegistry().gauge("react.cache.hitrate", new MetricSupplier<Gauge>() {
-
+			this.cacheModelMissCounter = metricsService.getRegistry().counter("react.cache.misses.models.total");
+			this.cacheHtmlMissCounter = metricsService.getRegistry().counter("react.cache.misses.html.total");
+			metricsService.getRegistry().gauge("react.cache.hitrate", () -> new RatioGauge() {
 				@Override
-				public Gauge newMetric() {
-					return new RatioGauge() {
-
-						@Override
-						protected Ratio getRatio() {
-							return Ratio.of(cacheHitCounter.getCount(), cacheTotalCounter.getCount());
-						}
-					};
+				protected Ratio getRatio() {
+					return Ratio.of(cacheHitCounter.getCount(), cacheTotalCounter.getCount());
+				}
+			});
+			metricsService.getRegistry().gauge("react.cache.missrate", () -> new RatioGauge() {
+				@Override
+				public Ratio getRatio() {
+					long misses = cacheModelMissCounter.getCount() + cacheHtmlMissCounter.getCount() + cacheErrorCounter.getCount();
+					return Ratio.of(misses, cacheTotalCounter.getCount());
 				}
 			});
 		}
@@ -77,9 +84,7 @@ public class ComponentCache {
 					.maximumSize(maxSize);
 
 			if (metricsService != null && metricsService.getRegistry() != null) {
-				builder.recordStats(() -> {
-					return metricsService.getCacheStatsCounter();
-				});
+				builder.recordStats(metricsService::getCacheStatsCounter);
 
 			}
 			cache = builder.build();
@@ -88,10 +93,9 @@ public class ComponentCache {
 
 	private ObjectWriter mapper;
 
-	public Object getModel(SlingHttpServletRequest request, String path, String resourceType) {
+	private Object getModel(SlingHttpServletRequest request) {
 		try {
-			Object model =  modelFactory.getModelFromRequest(request);
-			return model;
+			return modelFactory.getModelFromRequest(request);
 		} catch (ModelClassException e) {
 			return null;
 		}
@@ -103,18 +107,15 @@ public class ComponentCache {
 		}
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(model.getBytes("UTF-8"));
+			digest.update(model.getBytes(StandardCharsets.UTF_8));
 			byte[] hash = digest.digest();
 			return new String(hash);
-		} catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException e) {
 			throw new IllegalStateException("hashing algorithm not available", e);
 		}
 	}
 
-	public CachedHtml getHtml(CacheKey cacheKey, Object cacheableModel) {
-		if (cacheTotalCounter != null) {
-			cacheTotalCounter.inc();
-		}
+	private CachedHtml getHtml(CacheKey cacheKey, Object cacheableModel) {
 		CachedHtml cachedHtml = cache.getIfPresent(cacheKey);
 		if (cachedHtml == null) {
 			return null;
@@ -124,9 +125,6 @@ public class ComponentCache {
 			return null;
 		}
 		if (checksum.equals(cachedHtml.getModel())) {
-			if (cacheHitCounter != null) {
-				cacheHitCounter.inc();
-			}
 			return cachedHtml;
 
 		}
@@ -163,43 +161,48 @@ public class ComponentCache {
 
 	public RenderResult cache(ModelCollector collector, CacheKey key, SlingHttpServletRequest request, String path, String resourceType,
 			ResultRenderer render) throws Exception {
-		Object cacheableModel = null;
 		if (caching) {
-
+			incCounter(cacheTotalCounter);
 			try {
-				cacheableModel = getModel(request, path, resourceType);
+				Object cacheableModel = getModel(request);
 				if (cacheableModel != null) {
 					collector.addRequestModel(path, cacheableModel);
 					CachedHtml cachedHtml = getHtml(key, cacheableModel);
 					if (cachedHtml != null) {
-
 						RenderResult result = cachedHtml.getRenderResult();
 						request.setAttribute(ReactScriptEngine.REACT_ROOT_NO_KEY, cachedHtml.getRootNo());
 						LOGGER.debug("returning cache html for {}", path);
+						incCounter(cacheHitCounter);
 						return result;
-
 					}
+
+					incCounter(cacheHtmlMissCounter);
 					RenderResult result = render.render();
 					Integer rootNo = (Integer) request.getAttribute(ReactScriptEngine.REACT_ROOT_NO_KEY);
 					put(key, cacheableModel, result, rootNo);
-					// LOGGER.debug("no html cached for {}", path);
 					return result;
 				}
-				LOGGER.debug("no model for {}", path);
 
+				LOGGER.debug("no model for {} and type {}", path, resourceType);
+				cacheModelMissCounter.inc();
 			} catch (Exception e) {
+				incCounter(cacheErrorCounter);
 				LOGGER.error("cannot create model for {}. {}", path, e.getMessage());
 			}
-
 		}
 
 		return render.render();
-
 	}
 
 	public void clear() {
 		if (caching && cache != null) {
 			this.cache.invalidateAll();
+		}
+	}
+
+	private void incCounter(Counter counter) {
+		if (counter != null) {
+			counter.inc();
 		}
 	}
 
