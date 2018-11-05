@@ -83,26 +83,43 @@ public class PoolManager {
 	}
 
 	private ReactRenderEngine getRenderer(int level) throws InterruptedException {
+		final long startMethod = System.currentTimeMillis();
         final Timer.Context fullTime = getRendererTimer.time();
         ReactRenderEngine renderer = this.renderer.poll();
+        boolean tryCreate = false;
 		if (renderer == null) {
             Timer.Context createTime = createRendererTimer.time();
 			renderer = tryCreateRenderer(level);
+			tryCreate = true;
             createTime.stop();
 			if (renderer == null) {
                 final long start = System.currentTimeMillis();
                 renderer = this.renderer.poll(10, TimeUnit.SECONDS);
-                LOGGER.debug("pm: waited {}ms to get an render engine from pool", (System.currentTimeMillis() - start));
+                LOGGER.debug("pm: waited {}ms to get an render engine from pool", System.currentTimeMillis() - start);
 			}
 		}
 
-        fullTime.stop();
+		long elapsed = fullTime.stop() / 1_000_000;
+		LOGGER.debug("getRenderer took {} ms", elapsed);
+
+		if (!tryCreate && elapsed > 0) {
+			MdcUtil.addToMdc(startMethod, "getRenderer");
+		}
+
 		return renderer;
 	}
 
 	private synchronized ReactRenderEngine tryCreateRenderer(int level) {
 		if (level > 1 || rootLevelEngineCount.get() < maxRendererSize) {
+			final long start = System.currentTimeMillis();
+
 			ReactRenderEngine renderer = new ReactRenderEngine(jsEngine.createBindings(), stateHash);
+
+			final long elapsed = System.currentTimeMillis() - start;
+			LOGGER.debug("Creating renderer for level {} took {} ms", level, elapsed);
+
+			MdcUtil.addToMdc(start, "tryCreateRenderer", level);
+
 			if (level == 1) {
 				rootLevelEngineCount.incrementAndGet();
 			} else {
