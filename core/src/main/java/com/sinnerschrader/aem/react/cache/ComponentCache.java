@@ -15,10 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.sinnerschrader.aem.react.ReactScriptEngine;
 import com.sinnerschrader.aem.react.ReactScriptEngine.RenderResult;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
@@ -47,6 +49,8 @@ public class ComponentCache {
 
 	private Counter cacheHtmlMissCounter;
 
+	private Counter cacheRenderResultLengths;
+
 	private boolean debug;
 
 	public ComponentCache(ModelFactory modelFactory, ObjectWriter mapper, int maxSize, int maxMinutes,
@@ -54,18 +58,20 @@ public class ComponentCache {
 		super();
 		this.debug = debug;
 		if (metricsService != null && metricsService.getRegistry() != null) {
-			this.cacheErrorCounter = metricsService.getRegistry().counter("react.cache.error.total");
-			this.cacheHitCounter = metricsService.getRegistry().counter("react.cache.hit.total");
-			this.cacheTotalCounter = metricsService.getRegistry().counter("react.cache.total");
-			this.cacheModelMissCounter = metricsService.getRegistry().counter("react.cache.misses.models.total");
-			this.cacheHtmlMissCounter = metricsService.getRegistry().counter("react.cache.misses.html.total");
-			metricsService.getRegistry().gauge("react.cache.hitrate", () -> new RatioGauge() {
+			MetricRegistry metricRegistry = metricsService.getRegistry();
+			this.cacheErrorCounter = metricRegistry.counter("react.cache.error.total");
+			this.cacheHitCounter = metricRegistry.counter("react.cache.hit.total");
+			this.cacheTotalCounter = metricRegistry.counter("react.cache.total");
+			this.cacheModelMissCounter = metricRegistry.counter("react.cache.misses.models.total");
+			this.cacheHtmlMissCounter = metricRegistry.counter("react.cache.misses.html.total");
+			this.cacheRenderResultLengths = metricRegistry.counter("react.cache.render_results.total_length");
+			metricRegistry.gauge("react.cache.hitrate", () -> new RatioGauge() {
 				@Override
 				protected Ratio getRatio() {
 					return Ratio.of(cacheHitCounter.getCount(), cacheTotalCounter.getCount());
 				}
 			});
-			metricsService.getRegistry().gauge("react.cache.missrate", () -> new RatioGauge() {
+			metricRegistry.gauge("react.cache.missrate", () -> new RatioGauge() {
 				@Override
 				public Ratio getRatio() {
 					long misses = cacheModelMissCounter.getCount() + cacheHtmlMissCounter.getCount() + cacheErrorCounter.getCount();
@@ -79,13 +85,21 @@ public class ComponentCache {
 			caching = true;
 			this.modelFactory = modelFactory;
 			this.mapper = mapper;
-			Caffeine<Object, Object> builder = Caffeine.newBuilder()//
+			Caffeine<CacheKey, CachedHtml> builder = Caffeine.newBuilder()//
 					.expireAfterWrite(maxMinutes, TimeUnit.MINUTES)//
-					.maximumSize(maxSize);
+					.maximumSize(maxSize)
+					.removalListener((CacheKey key, CachedHtml value, RemovalCause cause) -> {
+						LOGGER.debug("Key {} was removed ({})", key, cause);
+						if (value == null || cacheRenderResultLengths == null) {
+							return;
+						}
+						long removedSize = sumRenderResultSizes(value.getRenderResult());
+						cacheRenderResultLengths.dec(removedSize);
+					})
+					;
 
 			if (metricsService != null && metricsService.getRegistry() != null) {
 				builder.recordStats(metricsService::getCacheStatsCounter);
-
 			}
 			cache = builder.build();
 		}
@@ -152,7 +166,10 @@ public class ComponentCache {
 			return;
 		}
 		cache.put(cacheKey, new CachedHtml(checksum, result, rootNo));
-
+		if (cacheRenderResultLengths != null) {
+			long increasedSize = sumRenderResultSizes(result);
+			cacheRenderResultLengths.inc(increasedSize);
+		}
 	}
 
 	public boolean isCaching() {
@@ -206,4 +223,17 @@ public class ComponentCache {
 		}
 	}
 
+	private static long sumRenderResultSizes(RenderResult renderResult) {
+		if (renderResult == null) {
+			return 0;
+		}
+		long sum = 0;
+		if (renderResult.cache != null) {
+			sum += renderResult.cache.length();
+		}
+		if (renderResult.html != null) {
+			sum += renderResult.html.length();
+		}
+		return sum;
+	}
 }

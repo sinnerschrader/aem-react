@@ -2,6 +2,8 @@ package com.sinnerschrader.aem.react.cache;
 
 import java.util.Collections;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.factory.ModelFactory;
 import org.junit.Assert;
@@ -33,7 +35,6 @@ public class ComponentCacheTest {
 	private ResultRenderer renderer;
 
 
-
 	@Before
 	public void before() {
 		Mockito.when(modelFactory.getModelFromRequest(request)).thenReturn(new Object());
@@ -46,7 +47,7 @@ public class ComponentCacheTest {
 		String path = "/content";
 		String type = "/apps/m100";
 
-		CacheKey key = new CacheKey(path, type, "disabled", true, Collections.EMPTY_LIST);
+		CacheKey key = new CacheKey(path, type, "disabled", true, Collections.emptyList());
 		Integer rootNo = 1;
 		RenderResult result = new RenderResult();
 		result.html = HTML;
@@ -60,11 +61,7 @@ public class ComponentCacheTest {
 		Assert.assertNotNull(model);
 		Object noModel = collector.getModel(path, "java.lang.ObjectXXX");
 		Assert.assertNull(noModel);
-
-
 	}
-
-
 
 
 	@Test
@@ -74,7 +71,7 @@ public class ComponentCacheTest {
 		String path = "/content";
 		String type = "/apps/m100";
 
-		CacheKey key = new CacheKey(path, type, "disabled", true, Collections.EMPTY_LIST);
+		CacheKey key = new CacheKey(path, type, "disabled", true, Collections.emptyList());
 		Integer rootNo = 1;
 		RenderResult result = new RenderResult();
 		result.html = HTML;
@@ -87,7 +84,6 @@ public class ComponentCacheTest {
 		RenderResult theResult = cache.cache(new ModelCollector(), key, request, path, type, renderer);
 
 		Assert.assertEquals(theResult.html, HTML);
-
 	}
 
 }

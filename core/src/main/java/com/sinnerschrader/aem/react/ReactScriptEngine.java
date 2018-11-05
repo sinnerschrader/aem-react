@@ -42,6 +42,8 @@ import com.sinnerschrader.aem.react.mapping.ResourceResolverHelperFactory;
 import com.sinnerschrader.aem.react.mapping.ResourceResolverUtils;
 import com.sinnerschrader.aem.react.metrics.ComponentMetrics;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
@@ -59,6 +61,8 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		public String html;
 		public String cache;
 	}
+
+	private static final Logger log = LoggerFactory.getLogger(ReactScriptEngine.class);
 
 	private static final String JSON_RENDER_SELECTOR = "json";
 	private static final String REACT_CONTEXT_KEY = "com.sinnerschrader.aem.react.ReactContext";
@@ -104,12 +108,15 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 
 	@Override
 	public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
+		long start = System.currentTimeMillis();
 		ClassLoader old = Thread.currentThread().getContextClassLoader();
 
 		Bindings bindings = getBindings(scriptContext);
 		SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
 		SlingHttpServletRequest originalRequest = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
 		SlingHttpServletRequest request;
+
+		String resourceType = null;
 
 		if (enableReverseMapping) {
 			ResourceResolver resolverHelper = ResourceResolverHelperFactory.create(originalRequest, mangleNameSpaces);
@@ -133,6 +140,7 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 				selectors = rawSelectors;
 			}
 			Resource resource = request.getResource();
+			resourceType = resource.getResourceType();
 
 			try (ComponentMetrics metrics = metricsService.create(resource)) {
 				SlingBindings slingBindings = (SlingBindings) request.getAttribute(SlingBindings.class.getName());
@@ -211,6 +219,12 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 			throw new ScriptException(e);
 		} finally {
 			Thread.currentThread().setContextClassLoader(old);
+
+			long elapsed = System.currentTimeMillis() - start;
+
+			MdcUtil.addToMdc(start, "eval", elapsed >= 1000 ? resourceType : null);
+
+			log.debug("React rendering of resource type {} took {} ms", resourceType, elapsed);
 		}
 	}
 
