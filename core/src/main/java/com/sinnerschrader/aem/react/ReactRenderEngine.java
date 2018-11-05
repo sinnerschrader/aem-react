@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class ReactRenderEngine {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEngine.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReactRenderEngine.class);
 
     private Bindings bindings;
     private String stateHash;
