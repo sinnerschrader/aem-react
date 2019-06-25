@@ -255,11 +255,11 @@ public class ReactScriptEngine extends AbstractSlingScriptEngine {
 		} catch (JSONException e) {
 			throw new TechnicalException("cannot create react props", e);
 		}
-		String jsonProps = StringEscapeUtils.escapeHtml4(reactProps.toString());
-		String classString = StringUtils.isNotEmpty(rootElementClass) ? " class=\"" + rootElementClass + "\"" : "";
-		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\""
-				+ String.valueOf(serverRendering) + "\" data-react=\"app\" >" + renderedHtml + "</" + rootElementName
-				+ ">" + "<textarea style=\"display:none;\">" + jsonProps + "</textarea>";
+		String classString = StringUtils.isNotEmpty(rootElementClass)
+				? " class=\"" + rootElementClass + "\""
+				: "";
+		String allHtml = "<" + rootElementName + " " + classString + " data-react-server=\"" + serverRendering + "\" data-react=\"app\" >" + renderedHtml + "</" + rootElementName + ">"
+				+ "<script type=\"application/json\">" + reactProps.toString() + "</script>";
 
 		return allHtml;
 	}
