@@ -48,6 +48,8 @@ import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.integration.TextProps;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @RunWith(MockitoJUnitRunner.class)
 public class IntegrationTest {
 
@@ -75,9 +77,9 @@ public class IntegrationTest {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	private ObjectNode getJsonFromTextArea(Element ta) throws IOException {
+	private ObjectNode getJsonFromScript(Element script) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
-        return (ObjectNode) objectMapper.readTree(ta.html());
+		return (ObjectNode) objectMapper.readTree(script.html());
 	}
 
 	private Element getWrapper(Document doc) {
@@ -85,8 +87,9 @@ public class IntegrationTest {
 		return es.get(0);
 	}
 
-	private Element getTextarea(Document doc) {
-		Elements es = doc.select("textarea");
+	private Element getScript(Document doc) {
+		Elements es = doc.select("script");
+		assertThat(es).hasSize(1);
 		return es.get(0);
 	}
 
@@ -124,13 +127,12 @@ public class IntegrationTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Element script = getScript(doc);
+		ObjectNode jsonFromScript = getJsonFromScript(script);
 		Assert.assertEquals("<span data-reactroot=\"\">Hallo</span>", wrapper.html());
-		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
-		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
-		Assert.assertEquals(content, jsonFromTextArea.get("cache").get("transforms").get(path).get("content").asText());
-
+		Assert.assertEquals(resourceType, jsonFromScript.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromScript.get("path").asText());
+		Assert.assertEquals(content, jsonFromScript.get("cache").get("transforms").get(path).get("content").asText());
 	}
 
 	@Test
@@ -154,14 +156,13 @@ public class IntegrationTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Element script = getScript(doc);
+		ObjectNode jsonFromScript = getJsonFromScript(script);
 		Assert.assertEquals("<span data-reactroot=\"\">RequestModel</span>", wrapper.html());
-		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
-		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
+		Assert.assertEquals(resourceType, jsonFromScript.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromScript.get("path").asText());
 		Assert.assertEquals("RequestModel",
-				jsonFromTextArea.get("cache").get("transforms").get(path + ":requestmodel").get("content").asText());
-
+				jsonFromScript.get("cache").get("transforms").get(path + ":requestmodel").get("content").asText());
 	}
 
 	@Test
