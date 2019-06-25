@@ -32,6 +32,8 @@ import com.sinnerschrader.aem.react.api.Sling;
 import com.sinnerschrader.aem.react.cache.ComponentCache;
 import com.sinnerschrader.aem.react.metrics.ComponentMetricsService;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @RunWith(MockitoJUnitRunner.class)
 public class ReactScriptEngineTest {
 
@@ -52,9 +54,9 @@ public class ReactScriptEngineTest {
 
 	private ScriptContext scriptContext;
 
-	private ObjectNode getJsonFromTextArea(Element ta) throws IOException {
+	private ObjectNode getJsonFromScript(Element script) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
-		return (ObjectNode) objectMapper.readTree(ta.html());
+		return (ObjectNode) objectMapper.readTree(script.html());
 	}
 
 	private Element getWrapper(Document doc) {
@@ -62,8 +64,9 @@ public class ReactScriptEngineTest {
 		return es.get(0);
 	}
 
-	private Element getTextarea(Document doc) {
-		Elements es = doc.select("textarea");
+	private Element getScript(Document doc) {
+		Elements es = doc.select("script");
+		assertThat(es).hasSize(1);
 		return es.get(0);
 	}
 
@@ -105,13 +108,12 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Element script = getScript(doc);
+		ObjectNode jsonFromScript = getJsonFromScript(script);
 		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
-		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
-		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
-		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-
+		Assert.assertEquals(resourceType, jsonFromScript.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromScript.get("path").asText());
+		Assert.assertEquals(result.cache, jsonFromScript.get("cache").toString());
 	}
 
 	private RenderResult expectResult() {
@@ -146,13 +148,12 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Element script = getScript(doc);
+		ObjectNode jsonFromScript = getJsonFromScript(script);
 		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
-		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
-		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
-		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-
+		Assert.assertEquals(resourceType, jsonFromScript.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromScript.get("path").asText());
+		Assert.assertEquals(result.cache, jsonFromScript.get("cache").toString());
 	}
 
 	@Test
@@ -180,11 +181,10 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
-		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
-		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
-
+		Element script = getScript(doc);
+		ObjectNode jsonFromScript = getJsonFromScript(script);
+		Assert.assertEquals(resourceType, jsonFromScript.get("resourceType").asText());
+		Assert.assertEquals(path, jsonFromScript.get("path").asText());
 	}
 
 	@Test
@@ -279,13 +279,12 @@ public class ReactScriptEngineTest {
 		Assert.assertEquals("test xxx", wrapper.attr("class"));
 		Assert.assertEquals("span", wrapper.nodeName());
 
-		Element textarea = getTextarea(doc);
-		ObjectNode jsonFromTextArea = getJsonFromTextArea(textarea);
+		Element script = getScript(doc);
+		ObjectNode jsonFromTextArea = getJsonFromScript(script);
 		Assert.assertTrue(wrapper.html().replaceAll("\\p{C}| ", "").startsWith(result.html));
 		Assert.assertEquals(resourceType, jsonFromTextArea.get("resourceType").asText());
 		Assert.assertEquals(path, jsonFromTextArea.get("path").asText());
 		Assert.assertEquals(result.cache, jsonFromTextArea.get("cache").toString());
-
 	}
 
 	private String getRenderedHtml() {
